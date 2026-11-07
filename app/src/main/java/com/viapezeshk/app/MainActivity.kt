@@ -1,5 +1,6 @@
 package com.viapezeshk.app
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -72,6 +73,17 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// ======== توابع کمکی برای خواندن و ذخیره شهر ========
+fun getUserCity(context: Context): String {
+    val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    return prefs.getString("user_city", "همهٔ ایران") ?: "همهٔ ایران"
+}
+
+fun saveUserCity(context: Context, city: String) {
+    val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    prefs.edit().putString("user_city", city).apply()
+}
+
 // ======== صفحه اصلی ========
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,12 +92,14 @@ fun HomeScreen(
     viewModel: DiseaseViewModel = viewModel(),
     bannerViewModel: BannerViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val diseases by viewModel.diseases.collectAsState()
     val banners by bannerViewModel.banners.collectAsState()
 
-    // لود کردن بنرهای صفحه اصلی
+    // گرفتن شهر کاربر و لود بنرهای صفحه اصلی
     LaunchedEffect(Unit) {
-        bannerViewModel.loadBanners("home_main")
+        val userCity = getUserCity(context)
+        bannerViewModel.loadBanners("home_main", userCity)
     }
 
     Scaffold(
@@ -336,20 +350,47 @@ fun ContactScreen(navController: NavController) {
     }
 }
 
+// ======== صفحه تنظیمات (با انتخاب شهر) ========
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
+    val context = LocalContext.current
+    var currentCity by remember { mutableStateOf(getUserCity(context)) }
+    var expanded by remember { mutableStateOf(false) }
+    val cities = listOf("همهٔ ایران", "تهران", "تبریز", "مشهد", "اصفهان", "شیراز", "کرج", "اهواز", "قم", "رشت")
+
     Scaffold(topBar = { TopAppBar(title = { Text("تنظیمات", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, containerColor = BackgroundLight) { padding ->
         Column(modifier = Modifier.padding(padding).padding(16.dp)) {
-            Text("شهر شما:", fontWeight = FontWeight.Bold)
-            Text("تهران", color = TextSecondary)
-            Spacer(modifier = Modifier.height(16.dp))
+            Text("انتخاب شهر (برای تبلیغات هدفمند):", fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                OutlinedTextField(
+                    value = currentCity,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite)
+                )
+                ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    cities.forEach { city ->
+                        DropdownMenuItem(text = { Text(city) }, onClick = { 
+                            currentCity = city
+                            saveUserCity(context, city)
+                            expanded = false 
+                        })
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
             Text("نسخه اپ: ۱.۰.۰", color = TextSecondary)
         }
     }
 }
 
-// ======== صفحه جزئیات بیماری (با تبلیغات اختصاصی) ========
+// ======== صفحه جزئیات بیماری ========
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiseaseDetailScreen(
@@ -358,30 +399,24 @@ fun DiseaseDetailScreen(
     viewModel: DiseaseViewModel = viewModel(),
     bannerViewModel: BannerViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val diseases by viewModel.diseases.collectAsState()
     val disease = diseases.find { it.id == diseaseId }
     
-    // لود کردن بنرهای مخصوص این صفحه (مثلا page_hpv)
     val banners by bannerViewModel.banners.collectAsState()
     LaunchedEffect(diseaseId) {
-        bannerViewModel.loadBanners("page_$diseaseId")
+        val userCity = getUserCity(context)
+        bannerViewModel.loadBanners("page_$diseaseId", userCity)
     }
 
     Scaffold(topBar = { TopAppBar(title = { Text(disease?.title ?: "جزئیات", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, containerColor = BackgroundLight) { padding ->
         if (disease == null) { Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryTeal) } }
         else {
             Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize().verticalScroll(rememberScrollState())) {
-                // هدر بیماری
                 Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(PrimaryTeal.copy(alpha = 0.1f)).padding(16.dp)) { Column { Text(disease.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimaryTeal); Text(disease.subtitle, color = TextPrimary) } }
-                
                 Spacer(modifier = Modifier.height(16.dp))
-                
-                // بنر تبلیغاتی اختصاصی همین صفحه (اگر وجود داشته باشه)
                 BannerCarousel(banners = banners)
-
                 Spacer(modifier = Modifier.height(16.dp))
-                
-                // محتوای بیماری
                 Text(text = disease.content, fontSize = 15.sp, lineHeight = 24.sp, color = TextPrimary)
             }
         }
