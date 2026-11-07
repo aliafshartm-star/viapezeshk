@@ -10,10 +10,9 @@ class BannerRepository {
     private val client = OkHttpClient()
     private val gson = Gson()
     
-    // آدرس فایل JSON توی گیت‌هاب (یوزرنیم و ریپازیتوری خودت)
     private val configUrl = "https://raw.githubusercontent.com/aliafshartm-star/viapezeshk/main/data/config.json"
 
-    suspend fun fetchBanners(): List<Banner> {
+    suspend fun fetchBanners(position: String): List<Banner> {
         return withContext(Dispatchers.IO) {
             try {
                 val request = Request.Builder().url(configUrl).build()
@@ -21,21 +20,19 @@ class BannerRepository {
                 
                 if (response.isSuccessful) {
                     val jsonString = response.body?.string()
-                    if (!jsonBodyNullOrEmpty(jsonString)) {
+                    if (!jsonString.isNullOrEmpty()) {
                         val config = gson.fromJson(jsonString, Config::class.java)
-                        // فقط بنرهایی رو برمی‌گردونیم که فعال هستن
-                        return@withContext config.banners?.filter { it.active } ?: emptyList()
+                        // فقط بنرهایی رو برمی‌گردونیم که فعال هستن و مربوط به این جایگاه (position) هستن
+                        return@withContext config.banners?.filter { 
+                            it.active && it.position == position 
+                        }?.sortedBy { it.priority } ?: emptyList()
                     }
                 }
                 emptyList()
             } catch (e: Exception) {
                 e.printStackTrace()
-                emptyList() // در صورت قطعی اینترنت، لیست خالی برمی‌گرده تا اپ کرش نکنه
+                emptyList()
             }
         }
-    }
-
-    private fun jsonBodyNullOrEmpty(json: String?): Boolean {
-        return json.isNullOrEmpty()
     }
 }
