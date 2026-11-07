@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.viapezeshk.app
 
 import android.content.Context
@@ -84,7 +86,6 @@ fun saveUserCity(context: Context, city: String) {
     prefs.edit().putString("user_city", city).apply()
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController, 
@@ -118,7 +119,6 @@ fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopHeader(onSettingsClick: () -> Unit) {
     Row(
@@ -252,7 +252,6 @@ fun BottomNavBar(navController: NavController) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PregnancyScreen(navController: NavController) {
     var showDatePicker by remember { mutableStateOf(false) }
@@ -312,7 +311,6 @@ fun PregnancyScreen(navController: NavController) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(navController: NavController, viewModel: DiseaseViewModel = viewModel()) {
     val diseases by viewModel.diseases.collectAsState()
@@ -329,7 +327,6 @@ fun SearchScreen(navController: NavController, viewModel: DiseaseViewModel = vie
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactScreen(navController: NavController) {
     Scaffold(topBar = { TopAppBar(title = { Text("ارتباط با ما", fontWeight = FontWeight.Bold) }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, bottomBar = { BottomNavBar(navController) }, containerColor = BackgroundLight) { padding ->
@@ -347,7 +344,6 @@ fun ContactScreen(navController: NavController) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
     val context = LocalContext.current
@@ -373,7 +369,6 @@ fun SettingsScreen(navController: NavController) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiseaseDetailScreen(
     navController: NavController, 
@@ -413,7 +408,6 @@ val labTests = listOf(
     LabTest("کلسترول تام", "mg/dL", 0f, 200f, "معمولاً مشکلی نیست.", "کلسترول بالا، ریسک بیماری قلبی.", 239f, "کلسترول مرزی.")
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LabCalculatorScreen(navController: NavController) {
     var expanded by remember { mutableStateOf(false) }
