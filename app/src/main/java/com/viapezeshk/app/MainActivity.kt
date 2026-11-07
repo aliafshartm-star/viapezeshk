@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.viapezeshk.app.data.Disease
 import com.viapezeshk.app.ui.theme.*
@@ -40,9 +41,11 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "home") {
                     composable("home") { HomeScreen(navController) }
+                    composable("search") { SearchScreen(navController) }
+                    composable("bookmarks") { PlaceholderScreen(navController, "نشان‌شده‌ها") }
+                    composable("contact") { ContactScreen(navController) }
                     composable("settings") { SettingsScreen(navController) }
                     composable("lab_calculator") { LabCalculatorScreen(navController) }
-                    // صفحه پویا برای همه بیماری‌ها
                     composable("disease_detail/{diseaseId}") { backStackEntry ->
                         val diseaseId = backStackEntry.arguments?.getString("diseaseId") ?: ""
                         DiseaseDetailScreen(navController, diseaseId)
@@ -61,14 +64,11 @@ fun HomeScreen(navController: NavController, viewModel: DiseaseViewModel = viewM
 
     Scaffold(
         topBar = { TopHeader(onSettingsClick = { navController.navigate("settings") }) },
-        bottomBar = { BottomNavBar() },
+        bottomBar = { BottomNavBar(navController) },
         containerColor = BackgroundLight
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(12.dp))
             BannerSection()
@@ -140,16 +140,12 @@ fun DiseaseListSection(navController: NavController, diseases: List<Disease>) {
     } else {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             diseases.forEach { disease ->
-                DiseaseListItem(
-                    disease = disease,
-                    onClick = { navController.navigate("disease_detail/${disease.id}") }
-                )
+                DiseaseListItem(disease = disease, onClick = { navController.navigate("disease_detail/${disease.id}") })
             }
         }
     }
 }
 
-// تابع کمکی برای تبدیل اسم آیکون به آیکون واقعی
 fun getIconFromName(name: String): ImageVector {
     return when (name) {
         "Coronavirus" -> Icons.Default.Coronavirus
@@ -175,13 +171,123 @@ fun DiseaseListItem(disease: Disease, onClick: () -> Unit = {}) {
     }
 }
 
+// ======== تولبار پایین (کاملاً فعال) ========
 @Composable
-fun BottomNavBar() {
+fun BottomNavBar(navController: NavController) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     NavigationBar(containerColor = SurfaceWhite, tonalElevation = 8.dp) {
-        NavigationBarItem(icon = { Icon(Icons.Filled.Home, contentDescription = "خانه") }, label = { Text("خانه", fontSize = 11.sp) }, selected = true, onClick = { }, colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryTeal, selectedTextColor = PrimaryTeal, indicatorColor = PrimaryTeal.copy(alpha = 0.1f), unselectedIconColor = TextSecondary, unselectedTextColor = TextSecondary))
-        NavigationBarItem(icon = { Icon(Icons.Filled.Search, contentDescription = "جستجو") }, label = { Text("جستجو", fontSize = 11.sp) }, selected = false, onClick = { })
-        NavigationBarItem(icon = { Icon(Icons.Filled.Star, contentDescription = "نشان‌ها") }, label = { Text("نشان‌ها", fontSize = 11.sp) }, selected = false, onClick = { })
-        NavigationBarItem(icon = { Icon(Icons.Filled.Phone, contentDescription = "ارتباط") }, label = { Text("ارتباط", fontSize = 11.sp) }, selected = false, onClick = { })
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Home, contentDescription = "خانه") },
+            label = { Text("خانه", fontSize = 11.sp) },
+            selected = currentRoute == "home",
+            onClick = { if (currentRoute != "home") navController.navigate("home") { popUpTo("home") { inclusive = true } } },
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryTeal, selectedTextColor = PrimaryTeal, indicatorColor = PrimaryTeal.copy(alpha = 0.1f), unselectedIconColor = TextSecondary, unselectedTextColor = TextSecondary)
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Search, contentDescription = "جستجو") },
+            label = { Text("جستجو", fontSize = 11.sp) },
+            selected = currentRoute == "search",
+            onClick = { if (currentRoute != "search") navController.navigate("search") },
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryTeal, selectedTextColor = PrimaryTeal, indicatorColor = PrimaryTeal.copy(alpha = 0.1f), unselectedIconColor = TextSecondary, unselectedTextColor = TextSecondary)
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Star, contentDescription = "نشان‌ها") },
+            label = { Text("نشان‌ها", fontSize = 11.sp) },
+            selected = currentRoute == "bookmarks",
+            onClick = { if (currentRoute != "bookmarks") navController.navigate("bookmarks") },
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryTeal, selectedTextColor = PrimaryTeal, indicatorColor = PrimaryTeal.copy(alpha = 0.1f), unselectedIconColor = TextSecondary, unselectedTextColor = TextSecondary)
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Phone, contentDescription = "ارتباط") },
+            label = { Text("ارتباط", fontSize = 11.sp) },
+            selected = currentRoute == "contact",
+            onClick = { if (currentRoute != "contact") navController.navigate("contact") },
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryTeal, selectedTextColor = PrimaryTeal, indicatorColor = PrimaryTeal.copy(alpha = 0.1f), unselectedIconColor = TextSecondary, unselectedTextColor = TextSecondary)
+        )
+    }
+}
+
+// ======== صفحه جستجو ========
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchScreen(navController: NavController, viewModel: DiseaseViewModel = viewModel()) {
+    val diseases by viewModel.diseases.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredDiseases = diseases.filter {
+        it.title.contains(searchQuery, ignoreCase = true) || it.subtitle.contains(searchQuery, ignoreCase = true)
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("جستجو", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)
+            )
+        },
+        bottomBar = { BottomNavBar(navController) },
+        containerColor = BackgroundLight
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("نام بیماری را وارد کنید...") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            if (filteredDiseases.isEmpty() && searchQuery.isNotEmpty()) {
+                Text("نتیجه‌ای یافت نشد.", color = TextSecondary)
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    filteredDiseases.forEach { disease ->
+                        DiseaseListItem(disease = disease, onClick = { navController.navigate("disease_detail/${disease.id}") })
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ======== صفحه ارتباط با ما ========
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ContactScreen(navController: NavController) {
+    Scaffold(
+        topBar = { TopAppBar(title = { Text("ارتباط با ما", fontWeight = FontWeight.Bold) }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) },
+        bottomBar = { BottomNavBar(navController) },
+        containerColor = BackgroundLight
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(modifier = Modifier.size(100.dp).clip(CircleShape).background(PrimaryTeal.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.SupportAgent, contentDescription = null, tint = PrimaryTeal, modifier = Modifier.size(50.dp))
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("پشتیبانی و ارتباط", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("برای سفارش تبلیغات یا ارتباط با ما، از راه‌های زیر استفاده کنید:", color = TextSecondary, textAlign = TextAlign.Center)
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Button(onClick = { /* باز کردن تلگرام */ }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal), shape = RoundedCornerShape(12.dp)) {
+                Icon(Icons.Default.Send, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("تلگرام پشتیبانی", fontWeight = FontWeight.Bold)
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Button(onClick = { /* تماس تلفنی */ }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = SurfaceWhite, contentColor = PrimaryTeal), shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryTeal)) {
+                Icon(Icons.Default.Phone, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("تماس تلفنی", fontWeight = FontWeight.Bold)
+            }
+        }
     }
 }
 
@@ -211,9 +317,7 @@ fun DiseaseDetailScreen(navController: NavController, diseaseId: String, viewMod
         containerColor = BackgroundLight
     ) { padding ->
         if (disease == null) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PrimaryTeal)
-            }
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryTeal) }
         } else {
             Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize()) {
                 Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(PrimaryTeal.copy(alpha = 0.1f)).padding(16.dp)) {
@@ -223,19 +327,13 @@ fun DiseaseDetailScreen(navController: NavController, diseaseId: String, viewMod
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                // نمایش محتوای دیتابیس
-                Text(
-                    text = disease.content,
-                    fontSize = 15.sp,
-                    lineHeight = 24.sp,
-                    color = TextPrimary
-                )
+                Text(text = disease.content, fontSize = 15.sp, lineHeight = 24.sp, color = TextPrimary)
             }
         }
     }
 }
 
-// ======== صفحه ماشین حساب (تفسیر بالینی) ========
+// ======== صفحه ماشین حساب ========
 data class LabTest(val name: String, val unit: String, val min: Float, val max: Float, val lowMsg: String, val highMsg: String, val borderlineMax: Float = 0f, val borderlineMsg: String = "")
 
 val labTests = listOf(
@@ -260,72 +358,37 @@ fun LabCalculatorScreen(navController: NavController) {
     ) { padding ->
         Column(modifier = Modifier.padding(padding).padding(16.dp)) {
             ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                OutlinedTextField(
-                    value = selectedTest.name,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("نوع آزمایش") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite)
-                )
+                OutlinedTextField(value = selectedTest.name, onValueChange = {}, readOnly = true, label = { Text("نوع آزمایش") }, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.menuAnchor().fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite))
                 ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    labTests.forEach { test ->
-                        DropdownMenuItem(text = { Text(test.name) }, onClick = { selectedTest = test; expanded = false; resultText = "" })
-                    }
+                    labTests.forEach { test -> DropdownMenuItem(text = { Text(test.name) }, onClick = { selectedTest = test; expanded = false; resultText = "" }) }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            OutlinedTextField(
-                value = inputValue,
-                onValueChange = { inputValue = it },
-                label = { Text("مقدار (${selectedTest.unit})") },
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite)
-            )
+            OutlinedTextField(value = inputValue, onValueChange = { inputValue = it }, label = { Text("مقدار (${selectedTest.unit})") }, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite))
             Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    val valFloat = inputValue.toFloatOrNull()
-                    if (valFloat != null) {
-                        when {
-                            valFloat < selectedTest.min -> {
-                                resultText = "پایین‌تر از حد نرمال:\n${selectedTest.lowMsg}"
-                                resultColor = Color(0xFFFDECEA)
-                                resultTextColor = Color(0xFFC0392B)
-                            }
-                            valFloat > selectedTest.max -> {
-                                if (selectedTest.borderlineMax > 0f && valFloat <= selectedTest.borderlineMax) {
-                                    resultText = "مرزی (نیاز به توجه):\n${selectedTest.borderlineMsg}"
-                                    resultColor = Color(0xFFFEF9E7)
-                                    resultTextColor = Color(0xFFF39C12)
-                                } else {
-                                    resultText = "بالاتر از حد نرمال:\n${selectedTest.highMsg}"
-                                    resultColor = Color(0xFFFDECEA)
-                                    resultTextColor = Color(0xFFC0392B)
-                                }
-                            }
-                            else -> {
-                                resultText = "طبیعی (نرمال):\nمقدار شما در محدوده طبیعی است."
-                                resultColor = Color(0xFFE8F8F5)
-                                resultTextColor = Color(0xFF27AE60)
-                            }
+            Button(onClick = {
+                val valFloat = inputValue.toFloatOrNull()
+                if (valFloat != null) {
+                    when {
+                        valFloat < selectedTest.min -> { resultText = "پایین‌تر از حد نرمال:\n${selectedTest.lowMsg}"; resultColor = Color(0xFFFDECEA); resultTextColor = Color(0xFFC0392B) }
+                        valFloat > selectedTest.max -> {
+                            if (selectedTest.borderlineMax > 0f && valFloat <= selectedTest.borderlineMax) { resultText = "مرزی (نیاز به توجه):\n${selectedTest.borderlineMsg}"; resultColor = Color(0xFFFEF9E7); resultTextColor = Color(0xFFF39C12) }
+                            else { resultText = "بالاتر از حد نرمال:\n${selectedTest.highMsg}"; resultColor = Color(0xFFFDECEA); resultTextColor = Color(0xFFC0392B) }
                         }
+                        else -> { resultText = "طبیعی (نرمال):\nمقدار شما در محدوده طبیعی است."; resultColor = Color(0xFFE8F8F5); resultTextColor = Color(0xFF27AE60) }
                     }
-                },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("تفسیر کن", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-            if (resultText.isNotEmpty()) {
-                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(resultColor).padding(16.dp)) {
-                    Text(text = resultText, color = resultTextColor, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
-            }
+            }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal), shape = RoundedCornerShape(12.dp)) { Text("تفسیر کن", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+            Spacer(modifier = Modifier.height(24.dp))
+            if (resultText.isNotEmpty()) { Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(resultColor).padding(16.dp)) { Text(text = resultText, color = resultTextColor, fontWeight = FontWeight.Bold, fontSize = 15.sp) } }
         }
     }
+}
+
+@Composable
+fun PlaceholderScreen(navController: NavController, title: String) {
+    Scaffold(
+        topBar = { TopAppBar(title = { Text(title) }) },
+        bottomBar = { BottomNavBar(navController) }
+    ) { padding -> Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text("به‌زودی...") } }
 }
