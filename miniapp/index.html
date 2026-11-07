@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>پنل مدیریت ویاپزشک</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div class="app-header">
+    <h1>پنل مدیریت ویاپزشک</h1>
+    <span class="user-name" id="userName">مدیر</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('add')">➕ بنر جدید</button>
+    <button class="tab" onclick="switchTab('list')">📋 لیست بنرها</button>
+  </div>
+
+  <!-- بخش افزودن بنر -->
+  <div id="tab-add" class="tab-content active">
+    <div class="card">
+      <label>جایگاه نمایش (کجا دیده شود؟)</label>
+      <select id="bannerPosition">
+        <option value="home_main">صفحه اصلی (کاروسل)</option>
+        <option value="page_hpv">صفحه HPV</option>
+        <option value="page_hair_loss">صفحه ریزش مو</option>
+        <option value="page_dental">صفحه دندانپزشکی</option>
+      </select>
+
+      <label>عنوان بنر</label>
+      <input type="text" id="bannerTitle" placeholder="مثلا: کلینیک تخصصی دندانپزشکی">
+
+      <label>زیرنویس</label>
+      <input type="text" id="bannerSubtitle" placeholder="مثلا: تهران، خیابان ولیعصر">
+
+      <label>رنگ پس‌زمینه (اختیاری)</label>
+      <input type="color" id="bannerColor" value="#0a7c7c">
+
+      <label>شهرها (برای چه شهرهایی نمایش داده شود؟)</label>
+      <select id="bannerCity">
+        <option value="all">همهٔ ایران (سراسری)</option>
+        <option value="تهران">فقط تهران</option>
+        <option value="تبریز">فقط تبریز</option>
+        <option value="مشهد">فقط مشهد</option>
+      </select>
+
+      <label>نوع لینک</label>
+      <select id="actionType">
+        <option value="url">لینک وب‌سایت / تلگرام</option>
+        <option value="tel">شماره تماس (تلفن)</option>
+      </select>
+
+      <label>آدرس لینک یا شماره تلفن</label>
+      <input type="text" id="actionValue" placeholder="مثلا: https://t.me/yourchannel یا 09121234567">
+
+      <button class="btn-primary" onclick="addBanner()">🚀 ثبت و انتشار بنر</button>
+    </div>
+  </div>
+
+  <!-- بخش لیست بنرها -->
+  <div id="tab-list" class="tab-content">
+    <div class="card">
+      <p style="text-align: center; color: #666;">لیست بنرها اینجا نمایش داده می‌شود...</p>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
