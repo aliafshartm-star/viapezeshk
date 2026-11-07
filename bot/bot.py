@@ -3,15 +3,18 @@ import json
 import base64
 import requests
 import logging
+import nest_asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+
+# فعال‌سازی nest_asyncio برای جلوگیری از خطای event loop در Render
+nest_asyncio.apply()
 
 # تنظیمات لاگ
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ======== تنظیمات شما ========
-# این مقادیر بعداً توی تنظیمات سرور (Environment Variables) ست میشن
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_TOKEN")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "YOUR_GITHUB_TOKEN")
 GITHUB_USER = "aliafshartm-star"
@@ -94,7 +97,8 @@ def main():
     app.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_web_app_data))
 
     logger.info("ربات شروع به کار کرد...")
-    app.run_polling()
+    # close_loop=False برای جلوگیری از خطای event loop اضافه شد
+    app.run_polling(close_loop=False)
 
 if __name__ == "__main__":
     main()
