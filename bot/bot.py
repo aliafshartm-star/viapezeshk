@@ -4,6 +4,8 @@ import base64
 import requests
 import logging
 import asyncio
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
@@ -23,6 +25,20 @@ HEADERS = {
     "Accept": "application/vnd.github.v3+json"
 }
 
+# ======== سرور فیک برای راضی کردن Render ========
+class DummyHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is running successfully!")
+
+def run_dummy_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(('0.0.0.0', port), DummyHandler)
+    logger.info(f"Fake server started on port {port}")
+    server.serve_forever()
+
+# ======== دستور شروع ========
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "سلام مدیر عزیز! 👋\n"
@@ -35,6 +51,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
     )
 
+# ======== دریافت اطلاعات از مینی‌اپ ========
 async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         data = json.loads(update.effective_message.web_app_data.data)
@@ -72,12 +89,16 @@ async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE
         logger.error(f"Error: {e}")
         await update.message.reply_text("❌ خطایی رخ داد. لطفاً دوباره تلاش کنید.")
 
+# ======== اجرای ربات ========
 def main():
-    asyncio.set_event_loop(asyncio.new_event_loop())
+    # اجرای سرور فیک در یک ترد جداگانه
+    threading.Thread(target=run_dummy_server, daemon=True).start()
+
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_web_app_data))
-    logger.info("ربات شروع به کار کرد...")
+    
+    logger.info("ربات تلگرام شروع به کار کرد...")
     app.run_polling(close_loop=False)
 
 if __name__ == "__main__":
