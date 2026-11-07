@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -73,7 +74,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// ======== توابع کمکی برای خواندن و ذخیره شهر ========
 fun getUserCity(context: Context): String {
     val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
     return prefs.getString("user_city", "همهٔ ایران") ?: "همهٔ ایران"
@@ -84,7 +84,6 @@ fun saveUserCity(context: Context, city: String) {
     prefs.edit().putString("user_city", city).apply()
 }
 
-// ======== صفحه اصلی ========
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -96,7 +95,6 @@ fun HomeScreen(
     val diseases by viewModel.diseases.collectAsState()
     val banners by bannerViewModel.banners.collectAsState()
 
-    // گرفتن شهر کاربر و لود بنرهای صفحه اصلی
     LaunchedEffect(Unit) {
         val userCity = getUserCity(context)
         bannerViewModel.loadBanners("home_main", userCity)
@@ -135,7 +133,7 @@ fun TopHeader(onSettingsClick: () -> Unit) {
     }
 }
 
-// ======== کاروسل بنرها ========
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BannerCarousel(banners: List<Banner>) {
     val context = LocalContext.current
@@ -254,7 +252,6 @@ fun BottomNavBar(navController: NavController) {
     }
 }
 
-// ======== صفحه ماشین حساب بارداری ========
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PregnancyScreen(navController: NavController) {
@@ -350,7 +347,6 @@ fun ContactScreen(navController: NavController) {
     }
 }
 
-// ======== صفحه تنظیمات (با انتخاب شهر) ========
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
@@ -365,22 +361,9 @@ fun SettingsScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
             
             ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                OutlinedTextField(
-                    value = currentCity,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite)
-                )
+                OutlinedTextField(value = currentCity, onValueChange = {}, readOnly = true, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.menuAnchor().fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite))
                 ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    cities.forEach { city ->
-                        DropdownMenuItem(text = { Text(city) }, onClick = { 
-                            currentCity = city
-                            saveUserCity(context, city)
-                            expanded = false 
-                        })
-                    }
+                    cities.forEach { city -> DropdownMenuItem(text = { Text(city) }, onClick = { currentCity = city; saveUserCity(context, city); expanded = false }) }
                 }
             }
 
@@ -390,7 +373,6 @@ fun SettingsScreen(navController: NavController) {
     }
 }
 
-// ======== صفحه جزئیات بیماری ========
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiseaseDetailScreen(
