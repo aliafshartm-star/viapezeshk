@@ -14,10 +14,9 @@ class BannerViewModel : ViewModel() {
     private val _banners = MutableStateFlow<List<Banner>>(emptyList())
     val banners: StateFlow<List<Banner>> = _banners
 
-    // تابع برای گرفتن بنرهای یه صفحه خاص (مثلا home_main یا page_hpv)
-    fun loadBanners(position: String) {
+    fun loadBanners(position: String, userCity: String) {
         viewModelScope.launch {
-            val fetchedBanners = repository.fetchBanners(position)
+            val fetchedBanners = repository.fetchBanners(position, userCity)
             _banners.value = fetchedBanners
         }
     }
