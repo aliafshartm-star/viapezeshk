@@ -11,19 +11,14 @@ import kotlinx.coroutines.launch
 class BannerViewModel : ViewModel() {
     private val repository = BannerRepository()
     
-    // لیست بنرها رو به صورت زنده نگه می‌داریم
     private val _banners = MutableStateFlow<List<Banner>>(emptyList())
     val banners: StateFlow<List<Banner>> = _banners
 
-    init {
-        fetchBanners()
-    }
-
-    private fun fetchBanners() {
+    // تابع برای گرفتن بنرهای یه صفحه خاص (مثلا home_main یا page_hpv)
+    fun loadBanners(position: String) {
         viewModelScope.launch {
-            val fetchedBanners = repository.fetchBanners()
-            // مرتب‌سازی بر اساس اولویت (priority)
-            _banners.value = fetchedBanners.sortedBy { it.priority }
+            val fetchedBanners = repository.fetchBanners(position)
+            _banners.value = fetchedBanners
         }
     }
 }
