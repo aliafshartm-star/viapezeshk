@@ -83,6 +83,11 @@ fun HomeScreen(
     val diseases by viewModel.diseases.collectAsState()
     val banners by bannerViewModel.banners.collectAsState()
 
+    // لود کردن بنرهای صفحه اصلی
+    LaunchedEffect(Unit) {
+        bannerViewModel.loadBanners("home_main")
+    }
+
     Scaffold(
         topBar = { TopHeader(onSettingsClick = { navController.navigate("settings") }) },
         bottomBar = { BottomNavBar(navController) },
@@ -168,7 +173,7 @@ fun BannerCarousel(banners: List<Banner>) {
 fun QuickActionsSection(navController: NavController) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         QuickActionItem(icon = Icons.Outlined.Science, title = "تفسیر بالینی", onClick = { navController.navigate("lab_calculator") })
-        QuickActionItem(icon = Icons.Outlined.ChildCare, title = "بارداری", onClick = { navController.navigate("pregnancy") }) // وصل شده به بارداری
+        QuickActionItem(icon = Icons.Outlined.ChildCare, title = "بارداری", onClick = { navController.navigate("pregnancy") })
         QuickActionItem(icon = Icons.Outlined.Coronavirus, title = "بیماری‌ها")
         QuickActionItem(icon = Icons.Outlined.Accessibility, title = "آناتومی")
     }
@@ -242,110 +247,56 @@ fun PregnancyScreen(navController: NavController) {
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedDateMillis by remember { mutableStateOf<Long?>(null) }
     var resultText by remember { mutableStateOf("") }
-
     val datePickerState = rememberDatePickerState()
 
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    selectedDateMillis = datePickerState.selectedDateMillis
-                    showDatePicker = false
-                }) { Text("تایید") }
-            },
+            confirmButton = { TextButton(onClick = { selectedDateMillis = datePickerState.selectedDateMillis; showDatePicker = false }) { Text("تایید") } },
             dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("لغو") } }
-        ) {
-            DatePicker(state = datePickerState)
-        }
+        ) { DatePicker(state = datePickerState) }
     }
 
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("بارداری", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) },
-        containerColor = BackgroundLight
-    ) { padding ->
+    Scaffold(topBar = { TopAppBar(title = { Text("بارداری", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, containerColor = BackgroundLight) { padding ->
         Column(modifier = Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState())) {
-            
             Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(SurfaceWhite).padding(20.dp)) {
                 Column {
                     Text("ماشین حساب بارداری", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("تاریخ اولین روز آخرین پریود خود را انتخاب کنید:", fontSize = 14.sp, color = TextSecondary)
                     Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Button(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal.copy(alpha = 0.1f), contentColor = PrimaryTeal), shape = RoundedCornerShape(12.dp)) {
-                        Icon(Icons.Default.DateRange, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("انتخاب تاریخ", fontWeight = FontWeight.Bold)
-                    }
-                    
+                    Button(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal.copy(alpha = 0.1f), contentColor = PrimaryTeal), shape = RoundedCornerShape(12.dp)) { Icon(Icons.Default.DateRange, contentDescription = null); Spacer(modifier = Modifier.width(8.dp)); Text("انتخاب تاریخ", fontWeight = FontWeight.Bold) }
                     Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Button(
-                        onClick = {
-                            selectedDateMillis?.let { millis ->
-                                // محاسبه تاریخ زایمان (LMP + 280 روز)
-                                val lmpDate = Date(millis)
-                                val calendar = Calendar.getInstance()
-                                calendar.time = lmpDate
-                                calendar.add(Calendar.DAY_OF_YEAR, 280)
-                                val eddDate = calendar.time
-                                
-                                val format = SimpleDateFormat("yyyy/MM/dd", Locale("fa"))
-                                val lmpStr = format.format(lmpDate)
-                                val eddStr = format.format(eddDate)
-                                
-                                // محاسبه هفته بارداری
-                                val diff = System.currentTimeMillis() - millis
-                                val days = TimeUnit.MILLISECONDS.toDays(diff).toInt()
-                                val weeks = days / 7
-                                
-                                resultText = "تاریخ آخرین پریود: $lmpStr\nتاریخ تقریبی زایمان: $eddStr\nشما در هفته $weeks بارداری هستید."
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("محاسبه تاریخ زایمان", fontWeight = FontWeight.Bold)
-                    }
+                    Button(onClick = {
+                        selectedDateMillis?.let { millis ->
+                            val lmpDate = Date(millis)
+                            val calendar = Calendar.getInstance()
+                            calendar.time = lmpDate
+                            calendar.add(Calendar.DAY_OF_YEAR, 280)
+                            val eddDate = calendar.time
+                            val format = SimpleDateFormat("yyyy/MM/dd", Locale("fa"))
+                            val lmpStr = format.format(lmpDate)
+                            val eddStr = format.format(eddDate)
+                            val diff = System.currentTimeMillis() - millis
+                            val days = TimeUnit.MILLISECONDS.toDays(diff).toInt()
+                            val weeks = days / 7
+                            resultText = "تاریخ آخرین پریود: $lmpStr\nتاریخ تقریبی زایمان: $eddStr\nشما در هفته $weeks بارداری هستید."
+                        }
+                    }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal), shape = RoundedCornerShape(12.dp)) { Text("محاسبه تاریخ زایمان", fontWeight = FontWeight.Bold) }
                 }
             }
-            
             Spacer(modifier = Modifier.height(16.dp))
-            
             if (resultText.isNotEmpty()) {
-                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color(0xFFE8F8F5)).padding(16.dp)) {
-                    Text(text = resultText, color = Color(0xFF0E6655), fontWeight = FontWeight.Bold, lineHeight = 24.sp)
-                }
+                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color(0xFFE8F8F5)).padding(16.dp)) { Text(text = resultText, color = Color(0xFF0E6655), fontWeight = FontWeight.Bold, lineHeight = 24.sp) }
             }
-
             Spacer(modifier = Modifier.height(24.dp))
-
-            // بخش راهنمای سه ماهه
             Text("راهنمای سه‌ماهه‌ها", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
             Spacer(modifier = Modifier.height(12.dp))
-            
-            Card(colors = CardDefaults.cardColors(containerColor = SurfaceWhite), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("سه‌ماهه اول (هفته ۱ تا ۱۳)", fontWeight = FontWeight.Bold, color = PrimaryTeal)
-                    Text("علائم: تهوع، خستگی. تغذیه: اسید فولیک. پرهیز از گوشت خام.", fontSize = 13.sp, color = TextSecondary)
-                }
-            }
+            Card(colors = CardDefaults.cardColors(containerColor = SurfaceWhite), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) { Column(modifier = Modifier.padding(16.dp)) { Text("سه‌ماهه اول (هفته ۱ تا ۱۳)", fontWeight = FontWeight.Bold, color = PrimaryTeal); Text("علائم: تهوع، خستگی. تغذیه: اسید فولیک. پرهیز از گوشت خام.", fontSize = 13.sp, color = TextSecondary) } }
             Spacer(modifier = Modifier.height(8.dp))
-            Card(colors = CardDefaults.cardColors(containerColor = SurfaceWhite), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("سه‌ماهه دوم (هفته ۱۴ تا ۲۷)", fontWeight = FontWeight.Bold, color = PrimaryTeal)
-                    Text("کاهش تهوع، شروع حرکت جنین. آزمایش قند بارداری در هفته ۲۴-۲۸.", fontSize = 13.sp, color = TextSecondary)
-                }
-            }
+            Card(colors = CardDefaults.cardColors(containerColor = SurfaceWhite), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) { Column(modifier = Modifier.padding(16.dp)) { Text("سه‌ماهه دوم (هفته ۱۴ تا ۲۷)", fontWeight = FontWeight.Bold, color = PrimaryTeal); Text("کاهش تهوع، شروع حرکت جنین. آزمایش قند بارداری در هفته ۲۴-۲۸.", fontSize = 13.sp, color = TextSecondary) } }
             Spacer(modifier = Modifier.height(8.dp))
-            Card(colors = CardDefaults.cardColors(containerColor = SurfaceWhite), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("سه‌ماهه سوم (هفته ۲۸ تا زایمان)", fontWeight = FontWeight.Bold, color = PrimaryTeal)
-                    Text("شمارش حرکات جنین، آمادگی زایمان. علائم خطر: خونریزی، درد شدید.", fontSize = 13.sp, color = TextSecondary)
-                }
-            }
+            Card(colors = CardDefaults.cardColors(containerColor = SurfaceWhite), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) { Column(modifier = Modifier.padding(16.dp)) { Text("سه‌ماهه سوم (هفته ۲۸ تا زایمان)", fontWeight = FontWeight.Bold, color = PrimaryTeal); Text("شمارش حرکات جنین، آمادگی زایمان. علائم خطر: خونریزی، درد شدید.", fontSize = 13.sp, color = TextSecondary) } }
         }
     }
 }
@@ -398,17 +349,39 @@ fun SettingsScreen(navController: NavController) {
     }
 }
 
+// ======== صفحه جزئیات بیماری (با تبلیغات اختصاصی) ========
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiseaseDetailScreen(navController: NavController, diseaseId: String, viewModel: DiseaseViewModel = viewModel()) {
+fun DiseaseDetailScreen(
+    navController: NavController, 
+    diseaseId: String, 
+    viewModel: DiseaseViewModel = viewModel(),
+    bannerViewModel: BannerViewModel = viewModel()
+) {
     val diseases by viewModel.diseases.collectAsState()
     val disease = diseases.find { it.id == diseaseId }
+    
+    // لود کردن بنرهای مخصوص این صفحه (مثلا page_hpv)
+    val banners by bannerViewModel.banners.collectAsState()
+    LaunchedEffect(diseaseId) {
+        bannerViewModel.loadBanners("page_$diseaseId")
+    }
+
     Scaffold(topBar = { TopAppBar(title = { Text(disease?.title ?: "جزئیات", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, containerColor = BackgroundLight) { padding ->
         if (disease == null) { Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryTeal) } }
         else {
             Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize().verticalScroll(rememberScrollState())) {
+                // هدر بیماری
                 Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(PrimaryTeal.copy(alpha = 0.1f)).padding(16.dp)) { Column { Text(disease.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimaryTeal); Text(disease.subtitle, color = TextPrimary) } }
+                
                 Spacer(modifier = Modifier.height(16.dp))
+                
+                // بنر تبلیغاتی اختصاصی همین صفحه (اگر وجود داشته باشه)
+                BannerCarousel(banners = banners)
+
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // محتوای بیماری
                 Text(text = disease.content, fontSize = 15.sp, lineHeight = 24.sp, color = TextPrimary)
             }
         }
