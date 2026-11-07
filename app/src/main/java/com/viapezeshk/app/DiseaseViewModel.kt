@@ -1,24 +1,20 @@
 package com.viapezeshk.app
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.viapezeshk.app.data.Banner
-import com.viapezeshk.app.data.BannerRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import com.viapezeshk.app.data.AppDatabase
+import com.viapezeshk.app.data.Disease
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 
-class BannerViewModel : ViewModel() {
-    private val repository = BannerRepository()
-    
-    private val _banners = MutableStateFlow<List<Banner>>(emptyList())
-    val banners: StateFlow<List<Banner>> = _banners
+class DiseaseViewModel(application: Application) : AndroidViewModel(application) {
+    private val database = AppDatabase.getDatabase(application)
+    private val dao = database.diseaseDao()
 
-    // تابع برای گرفتن بنرهای یه صفحه خاص با توجه به شهر کاربر
-    fun loadBanners(position: String, userCity: String) {
-        viewModelScope.launch {
-            val fetchedBanners = repository.fetchBanners(position, userCity)
-            _banners.value = fetchedBanners
-        }
-    }
+    val diseases = dao.getAllDiseases().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 }
