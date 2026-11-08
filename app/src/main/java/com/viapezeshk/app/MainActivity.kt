@@ -71,7 +71,6 @@ class MainActivity : ComponentActivity() {
                     composable("lab_calculator") { LabCalculatorScreen(navController) }
                     composable("pregnancy") { PregnancyScreen(navController) }
                     
-                    // صفحه جدید برای نمایش بیماری‌های یک دسته خاص
                     composable("category/{categoryName}") { backStackEntry ->
                         val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
                         CategoryDiseasesScreen(navController, categoryName)
@@ -144,7 +143,6 @@ fun HomeScreen(
             
             Text("دسته‌بندی‌های آناتومی", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(bottom = 12.dp))
             
-            // گرید دسته‌بندی‌ها
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 diseaseCategories.chunked(2).forEach { rowCategories ->
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -264,11 +262,9 @@ fun QuickActionItem(icon: ImageVector, title: String, onClick: () -> Unit = {}) 
     }
 }
 
-// ======== صفحه نمایش بیماری‌های یک دسته ========
 @Composable
 fun CategoryDiseasesScreen(navController: NavController, categoryName: String, viewModel: DiseaseViewModel = viewModel()) {
     val diseases by viewModel.diseases.collectAsState()
-    // فیلتر کردن بیماری‌ها بر اساس دسته‌بندی
     val filteredDiseases = diseases.filter { it.category == categoryName }
 
     Scaffold(
@@ -485,6 +481,7 @@ fun SettingsScreen(navController: NavController) {
     }
 }
 
+// ======== صفحه جزئیات بیماری (با استایل حرفه‌ای) ========
 @Composable
 fun DiseaseDetailScreen(
     navController: NavController, 
@@ -506,11 +503,52 @@ fun DiseaseDetailScreen(
         if (disease == null) { Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryTeal) } }
         else {
             Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize().verticalScroll(rememberScrollState())) {
-                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(PrimaryTeal.copy(alpha = 0.1f)).padding(16.dp)) { Column { Text(disease.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimaryTeal); Text(disease.subtitle, color = TextPrimary) } }
+                
+                // هدر بیماری
+                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(PrimaryTeal.copy(alpha = 0.1f)).padding(16.dp)) { 
+                    Column { 
+                        Text(disease.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimaryTeal)
+                        Text(disease.subtitle, color = TextPrimary) 
+                    } 
+                }
+                
                 Spacer(modifier = Modifier.height(16.dp))
                 BannerCarousel(banners = banners)
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(text = disease.content, fontSize = 15.sp, lineHeight = 24.sp, color = TextPrimary)
+                
+                // پارس کردن و نمایش متن به صورت حرفه‌ای
+                val sections = disease.content.split("\n\n")
+                sections.forEach { section ->
+                    if (section.trim().startsWith("🚨")) {
+                        // کادر قرمز برای علائم خطر
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = section.trim(),
+                                color = Color(0xFFC62828),
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(16.dp),
+                                lineHeight = 24.sp
+                            )
+                        }
+                    } else if (section.trim().startsWith("🔹")) {
+                        // تیترهای بخش‌ها (مثل تعریف، چی خوبه...)
+                        val title = section.substringBefore("\n").replace("🔹", "").trim()
+                        val body = section.substringAfter("\n").trim()
+                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                            Text(text = title, color = PrimaryTeal, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(text = body, fontSize = 15.sp, lineHeight = 26.sp, color = TextPrimary)
+                        }
+                    } else {
+                        // بقیه متن‌ها
+                        Text(text = section.trim(), fontSize = 15.sp, lineHeight = 26.sp, color = TextPrimary, modifier = Modifier.padding(vertical = 8.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
