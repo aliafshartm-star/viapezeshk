@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateDpAsState
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -383,18 +385,100 @@ fun PregnancyScreen(navController: NavController) {
     }
 }
 
+// ======== صفحه جستجوی هوشمند (چت‌مانند) ========
 @Composable
 fun SearchScreen(navController: NavController, viewModel: DiseaseViewModel = viewModel()) {
-    val diseases by viewModel.diseases.collectAsState()
+    val isSearching by viewModel.isSearching.collectAsState()
+    val searchResult by viewModel.searchResult.collectAsState()
+    val isOnlineResult by viewModel.isOnlineResult.collectAsState()
+    
     var searchQuery by remember { mutableStateOf("") }
-    val filteredDiseases = diseases.filter { it.title.contains(searchQuery, ignoreCase = true) || it.subtitle.contains(searchQuery, ignoreCase = true) }
+    val context = LocalContext.current
+    val view = LocalView.current
 
-    Scaffold(topBar = { TopAppBar(title = { Text("جستجو", fontWeight = FontWeight.Bold) }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, bottomBar = { BottomNavBar(navController) }, containerColor = BackgroundLight) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
-            OutlinedTextField(value = searchQuery, onValueChange = { searchQuery = it }, placeholder = { Text("نام بیماری را وارد کنید...") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite))
-            Spacer(modifier = Modifier.height(16.dp))
-            if (filteredDiseases.isEmpty() && searchQuery.isNotEmpty()) { Text("نتیجه‌ای یافت نشد.", color = TextSecondary) }
-            else { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { filteredDiseases.forEach { disease -> DiseaseListItem(disease = disease, onClick = { navController.navigate("disease_detail/${disease.id}") }) } } }
+    Scaffold(
+        topBar = { TopAppBar(title = { Text("دستیار هوشمند", fontWeight = FontWeight.Bold) }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, 
+        bottomBar = { BottomNavBar(navController) }, 
+        containerColor = BackgroundLight
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize()) {
+            
+            Box(modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                if (isSearching) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(top = 40.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(color = PrimaryTeal, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("در حال فکر کردن و جستجو...", color = TextSecondary)
+                    }
+                } else if (searchResult != null) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.SmartToy, contentDescription = null, tint = PrimaryTeal)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (isOnlineResult) "پاسخ از منابع آنلاین (ویکی‌پدیا)" else "پاسخ از دیتابیس آفلاین",
+                                    fontWeight = FontWeight.Bold,
+                                    color = PrimaryTeal,
+                                    fontSize = 14.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = searchResult!!,
+                                fontSize = 15.sp,
+                                lineHeight = 28.sp,
+                                color = TextPrimary,
+                                textAlign = TextAlign.Justify
+                            )
+                            
+                            if (isOnlineResult) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color(0xFFFFF3E0)).padding(8.dp)) {
+                                    Text("⚠️ این اطلاعات از اینترنت دریافت شده و جایگزین نظر پزشک نیست.", color = Color(0xFFE65100), fontSize = 12.sp)
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        Icon(Icons.Default.Psychology, contentDescription = null, tint = PrimaryTeal.copy(alpha = 0.5f), modifier = Modifier.size(80.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("هر بیماری، علامت یا دارویی رو می‌خوای بپرس...", color = TextSecondary)
+                    }
+                }
+            }
+
+            Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("مثلا: دیابت، میگرن، آکنه...") },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = SurfaceWhite,
+                        unfocusedContainerColor = SurfaceWhite,
+                        focusedBorderColor = PrimaryTeal
+                    )
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = { 
+                        viewModel.smartSearch(searchQuery)
+                        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.hideSoftInputFromWindow(view.windowToken, 0)
+                    },
+                    modifier = Modifier.size(50.dp).clip(CircleShape).background(PrimaryTeal)
+                ) {
+                    Icon(Icons.Default.Send, contentDescription = "جستجو", tint = Color.White)
+                }
+            }
         }
     }
 }
