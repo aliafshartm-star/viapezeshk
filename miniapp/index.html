@@ -16,9 +16,10 @@
   <div class="tabs">
     <button class="tab active" onclick="switchTab('add')">➕ بنر جدید</button>
     <button class="tab" onclick="switchTab('list')">📋 لیست بنرها</button>
+    <button class="tab" onclick="switchTab('contact')">📞 ارتباطات</button>
   </div>
 
-  <!-- بخش افزودن بنر -->
+  <!-- بخش ۱: افزودن بنر -->
   <div id="tab-add" class="tab-content active">
     <div class="card">
       <label>جایگاه نمایش (کجا دیده شود؟)</label>
@@ -26,8 +27,14 @@
         <option value="home_main">صفحه اصلی (کاروسل)</option>
         <option value="page_hpv">صفحه HPV</option>
         <option value="page_hair_loss">صفحه ریزش مو</option>
-        <option value="page_dental">صفحه دندانپزشکی</option>
+        <option value="page_migraine">صفحه میگرن</option>
+        <option value="page_reflux">صفحه رفلاکس معده</option>
+        <option value="lab_calculator">صفحه تفسیر آزمایش</option>
+        <option value="pregnancy">صفحه بارداری</option>
       </select>
+
+      <label>لینک عکس بنر (اختیاری)</label>
+      <input type="text" id="bannerImage" placeholder="https://example.com/image.jpg">
 
       <label>عنوان بنر</label>
       <input type="text" id="bannerTitle" placeholder="مثلا: کلینیک تخصصی دندانپزشکی">
@@ -35,7 +42,7 @@
       <label>زیرنویس</label>
       <input type="text" id="bannerSubtitle" placeholder="مثلا: تهران، خیابان ولیعصر">
 
-      <label>رنگ پس‌زمینه (اختیاری)</label>
+      <label>رنگ پس‌زمینه (اگر عکس نداری)</label>
       <input type="color" id="bannerColor" value="#0a7c7c">
 
       <label>شهرها (برای چه شهرهایی نمایش داده شود؟)</label>
@@ -44,6 +51,7 @@
         <option value="تهران">فقط تهران</option>
         <option value="تبریز">فقط تبریز</option>
         <option value="مشهد">فقط مشهد</option>
+        <option value="اصفهان">فقط اصفهان</option>
       </select>
 
       <label>نوع لینک</label>
@@ -53,16 +61,54 @@
       </select>
 
       <label>آدرس لینک یا شماره تلفن</label>
-      <input type="text" id="actionValue" placeholder="مثلا: https://t.me/yourchannel یا 09121234567">
+      <input type="text" id="actionValue" placeholder="مثلا: https://t.me/yourchannel">
 
       <button class="btn-primary" onclick="addBanner()">🚀 ثبت و انتشار بنر</button>
     </div>
   </div>
 
-  <!-- بخش لیست بنرها -->
+  <!-- بخش ۲: لیست بنرها -->
   <div id="tab-list" class="tab-content">
     <div class="card">
       <p style="text-align: center; color: #666;">لیست بنرها اینجا نمایش داده می‌شود...</p>
+    </div>
+  </div>
+
+  <!-- بخش ۳: مدیریت ارتباطات (پویا) -->
+  <div id="tab-contact" class="tab-content">
+    <div class="card">
+      <h3 style="margin-bottom: 16px; color: var(--primary);">افزودن کادر ارتباطی جدید</h3>
+      
+      <label>آیکون کادر</label>
+      <select id="contactIcon">
+        <option value="Send">تلگرام (Send)</option>
+        <option value="Phone">تماس تلفنی (Phone)</option>
+        <option value="PlayArrow">یوتیوب (PlayArrow)</option>
+        <option value="CameraAlt">اینستاگرام (CameraAlt)</option>
+        <option value="Language">وب‌سایت (Language)</option>
+        <option value="Star">سایر (Star)</option>
+      </select>
+
+      <label>عنوان کادر</label>
+      <input type="text" id="contactTitle" placeholder="مثلا: کانال یوتیوب ما">
+
+      <label>مقدار (لینک یا شماره تلفن)</label>
+      <input type="text" id="contactValue" placeholder="مثلا: https://youtube.com/...">
+
+      <label>نوع عملکرد</label>
+      <select id="contactType">
+        <option value="url">باز کردن لینک</option>
+        <option value="tel">تماس تلفنی</option>
+      </select>
+
+      <button class="btn-primary" onclick="addContactItem()" style="background: #4CAF50; box-shadow: none;">➕ افزودن به لیست</button>
+      
+      <hr style="margin: 24px 0; border: none; border-top: 1px solid #eee;">
+
+      <h3 style="margin-bottom: 16px; color: var(--primary);">کادرهای فعلی</h3>
+      <div id="contactPreviewList" style="margin-bottom: 16px;"></div>
+
+      <button class="btn-primary" onclick="saveAllContacts()">🚀 ذخیره نهایی و ارسال به اپ</button>
     </div>
   </div>
 
