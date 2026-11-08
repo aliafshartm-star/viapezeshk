@@ -3,9 +3,11 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- صلیب پزشکی سفید -->
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M44,28h20v16h16v20h-16v16h-20v-16h-16v-20h16z" />
+    <!-- خط مورب برای ایجاد حس حرف V -->
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M70,78 L80,88 L75,93 L65,83 Z" />
