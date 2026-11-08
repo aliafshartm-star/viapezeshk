@@ -50,6 +50,7 @@ import coil.compose.AsyncImage
 import com.viapezeshk.app.data.Banner
 import com.viapezeshk.app.data.ContactItem
 import com.viapezeshk.app.data.Disease
+import com.viapezeshk.app.data.Drug
 import com.viapezeshk.app.ui.theme.*
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -81,6 +82,13 @@ class MainActivity : ComponentActivity() {
                     composable("disease_detail/{diseaseId}") { backStackEntry ->
                         val diseaseId = backStackEntry.arguments?.getString("diseaseId") ?: ""
                         DiseaseDetailScreen(navController, diseaseId)
+                    }
+
+                    // روت‌های جدید برای داروها
+                    composable("drugs") { DrugListScreen(navController) }
+                    composable("drug_detail/{drugId}") { backStackEntry ->
+                        val drugId = backStackEntry.arguments?.getString("drugId") ?: ""
+                        DrugDetailScreen(navController, drugId)
                     }
                 }
             }
@@ -141,8 +149,28 @@ fun HomeScreen(
             BannerCarousel(banners = banners)
             Spacer(modifier = Modifier.height(20.dp))
             QuickActionsSection(navController)
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
+            // دکمه دانشنامه داروها
+            Card(
+                colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().clickable { navController.navigate("drugs") }
+            ) {
+                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(Color(0xFFE8F5E9)), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Medication, contentDescription = null, tint = Color(0xFF2E7D32))
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("دانشنامه داروها", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
+                        Text("اطلاعات عمومی و هشدارهای دارویی", fontSize = 12.sp, color = TextSecondary)
+                    }
+                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = null, tint = TextSecondary)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
             Text("دسته‌بندی‌های آناتومی", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.padding(bottom = 12.dp))
             
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -385,7 +413,6 @@ fun PregnancyScreen(navController: NavController) {
     }
 }
 
-// ======== صفحه جستجوی هوشمند (چت‌مانند) ========
 @Composable
 fun SearchScreen(navController: NavController, viewModel: DiseaseViewModel = viewModel()) {
     val isSearching by viewModel.isSearching.collectAsState()
@@ -631,6 +658,112 @@ fun DiseaseDetailScreen(
         }
     }
 }
+
+// ======== صفحه لیست داروها ========
+@Composable
+fun DrugListScreen(navController: NavController, viewModel: DrugViewModel = viewModel()) {
+    val drugs by viewModel.drugs.collectAsState()
+
+    Scaffold(
+        topBar = { TopAppBar(title = { Text("دانشنامه داروها", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) },
+        containerColor = BackgroundLight
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState())) {
+            
+            // هشدار بزرگ بالای صفحه
+            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFFFFF3E0)).padding(16.dp).padding(bottom = 8.dp)) {
+                Text("⚠️ اطلاعات این بخش صرفاً جنبه آموزشی دارد. مصرف هر دارو باید با تجویز و تحت نظر پزشک باشد. مصرف خودسرانه دارو خطرناک است.", color = Color(0xFFE65100), fontSize = 13.sp, fontWeight = FontWeight.Bold, lineHeight = 20.sp)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (drugs.isEmpty()) {
+                CircularProgressIndicator(color = PrimaryTeal)
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    drugs.forEach { drug ->
+                        DrugListItem(drug = drug, onClick = { navController.navigate("drug_detail/${drug.id}") })
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DrugListItem(drug: Drug, onClick: () -> Unit = {}) {
+    Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(SurfaceWhite).clickable { onClick() }.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFE8F5E9)), contentAlignment = Alignment.Center) {
+            Icon(Icons.Default.Medication, contentDescription = null, tint = Color(0xFF2E7D32))
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = drug.name, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text(text = drug.category, fontSize = 12.sp, color = TextSecondary)
+        }
+        Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null, tint = TextSecondary)
+    }
+}
+
+// ======== صفحه جزئیات دارو ========
+@Composable
+fun DrugDetailScreen(navController: NavController, drugId: String, viewModel: DrugViewModel = viewModel()) {
+    val drugs by viewModel.drugs.collectAsState()
+    val drug = drugs.find { it.id == drugId }
+
+    Scaffold(
+        topBar = { TopAppBar(title = { Text(drug?.name ?: "جزئیات دارو", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) },
+        containerColor = BackgroundLight
+    ) { padding ->
+        if (drug == null) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryTeal) }
+        } else {
+            Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize().verticalScroll(rememberScrollState())) {
+                
+                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color(0xFFE8F5E9)).padding(16.dp)) { 
+                    Column { 
+                        Text(drug.name, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color(0xFF2E7D32))
+                        Text("نام ژنریک: ${drug.genericName}", color = TextPrimary, fontSize = 14.sp)
+                        Text("دسته: ${drug.category}", color = TextSecondary, fontSize = 13.sp)
+                    } 
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // هشدار قرمز بزرگ (خیلی مهم)
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    border = BorderStroke(1.dp, Color(0xFFC62828))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("⚠️ هشدار مهم", color = Color(0xFFC62828), fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(drug.warnings, color = Color(0xFFC62828), fontSize = 14.sp, lineHeight = 22.sp)
+                    }
+                }
+
+                Text("🔹 کاربرد عمومی:", fontWeight = FontWeight.Bold, color = PrimaryTeal, fontSize = 16.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(drug.usage, fontSize = 15.sp, lineHeight = 26.sp, color = TextPrimary)
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text("🔹 عوارض جانبی شایع:", fontWeight = FontWeight.Bold, color = PrimaryTeal, fontSize = 16.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(drug.sideEffects, fontSize = 15.sp, lineHeight = 26.sp, color = TextPrimary)
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFFF5F5F5)).padding(16.dp)) {
+                    Text("این اطلاعات صرفاً جنبه آموزشی دارد و جایگزین نسخه پزشک نیست.", color = TextSecondary, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                }
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+    }
+}
+
 
 data class LabTest(val name: String, val unit: String, val min: Float, val max: Float, val lowMsg: String, val highMsg: String, val borderlineMax: Float = 0f, val borderlineMsg: String = "")
 
