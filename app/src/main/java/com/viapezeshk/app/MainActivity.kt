@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = "home") {
                     composable("home") { HomeScreen(navController) }
                     composable("search") { SearchScreen(navController) }
-                    composable("bookmarks") { BookmarksScreen(navController) } // وصل شد
+                    composable("bookmarks") { BookmarksScreen(navController) }
                     composable("contact") { ContactScreen(navController) }
                     composable("settings") { SettingsScreen(navController, settingsViewModel) }
                     composable("lab_calculator") { LabCalculatorScreen(navController) }
@@ -521,7 +521,6 @@ fun SettingsScreen(navController: NavController, settingsViewModel: SettingsView
     }
 }
 
-// ======== صفحه جزئیات بیماری با ستاره نشان ========
 @Composable
 fun DiseaseDetailScreen(
     navController: NavController, 
@@ -545,6 +544,18 @@ fun DiseaseDetailScreen(
     Scaffold(topBar = { TopAppBar(title = { Text(disease?.title ?: "جزئیات", fontWeight = FontWeight.Bold) }, 
         actions = {
             if (disease != null) {
+                // دکمه اشتراک‌گذاری
+                IconButton(onClick = { 
+                    val shareIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, "بیماری ${disease.title}:\n\n${disease.content}\n\n(از اپلیکیشن ویاپزشک)")
+                        type = "text/plain"
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "اشتراک‌گذاری"))
+                }) {
+                    Icon(Icons.Default.Share, contentDescription = "اشتراک‌گذاری", tint = MaterialTheme.colorScheme.onSurface)
+                }
+                // دکمه نشان‌کردن
                 IconButton(onClick = { bookmarkViewModel.toggleDiseaseBookmark(disease.id, disease.isBookmarked) }) {
                     Icon(
                         imageVector = if (disease.isBookmarked) Icons.Filled.Star else Icons.Outlined.Star,
@@ -623,7 +634,6 @@ fun DrugListItem(drug: Drug, onClick: () -> Unit = {}) {
     }
 }
 
-// ======== صفحه جزئیات دارو با ستاره نشان ========
 @Composable
 fun DrugDetailScreen(
     navController: NavController, 
@@ -631,12 +641,25 @@ fun DrugDetailScreen(
     viewModel: DrugViewModel = viewModel(),
     bookmarkViewModel: BookmarkViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val drugs by viewModel.drugs.collectAsState()
     val drug = drugs.find { it.id == drugId }
 
     Scaffold(topBar = { TopAppBar(title = { Text(drug?.name ?: "جزئیات دارو", fontWeight = FontWeight.Bold) }, 
         actions = {
             if (drug != null) {
+                // دکمه اشتراک‌گذاری
+                IconButton(onClick = { 
+                    val shareIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, "داروی ${drug.name}:\n\nکاربرد: ${drug.usage}\n\nعوارض: ${drug.sideEffects}\n\n(از اپلیکیشن ویاپزشک)")
+                        type = "text/plain"
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "اشتراک‌گذاری"))
+                }) {
+                    Icon(Icons.Default.Share, contentDescription = "اشتراک‌گذاری", tint = MaterialTheme.colorScheme.onSurface)
+                }
+                // دکمه نشان‌کردن
                 IconButton(onClick = { bookmarkViewModel.toggleDrugBookmark(drug.id, drug.isBookmarked) }) {
                     Icon(
                         imageVector = if (drug.isBookmarked) Icons.Filled.Star else Icons.Outlined.Star,
