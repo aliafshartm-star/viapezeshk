@@ -24,16 +24,22 @@
     <div class="card">
       <label>جایگاه نمایش (کجا دیده شود؟)</label>
       <select id="bannerPosition">
-        <option value="home_main">صفحه اصلی (کاروسل)</option>
+        <option value="home_main">صفحه اصلی</option>
+        <option value="home_bottom">پایین صفحه اصلی</option>
+        <option value="lab_calculator">صفحه تفسیر آزمایش</option>
+        <option value="pregnancy">صفحه بارداری</option>
+        <option value="anatomy">صفحه آناتومی</option>
+        <option value="pathogens">صفحه عوامل بیماری‌زا</option>
+        <option value="pediatrics">صفحه کودکان</option>
         <option value="page_hpv">صفحه HPV</option>
         <option value="page_hair_loss">صفحه ریزش مو</option>
         <option value="page_migraine">صفحه میگرن</option>
         <option value="page_reflux">صفحه رفلاکس معده</option>
-        <option value="lab_calculator">صفحه تفسیر آزمایش</option>
-        <option value="pregnancy">صفحه بارداری</option>
       </select>
 
-      <label>لینک عکس بنر (اختیاری)</label>
+      <label>عکس بنر (از گالری انتخاب کنید)</label>
+      <input type="file" id="bannerImageFile" accept="image/*" style="background:#fff; padding:10px; border-radius:10px; border:1px dashed var(--primary);">
+      <div style="text-align:center; font-size:12px; color:#888; margin: 8px 0;">یا لینک عکس را وارد کنید</div>
       <input type="text" id="bannerImage" placeholder="https://example.com/image.jpg">
 
       <label>عنوان بنر</label>
@@ -48,10 +54,36 @@
       <label>شهرها (برای چه شهرهایی نمایش داده شود؟)</label>
       <select id="bannerCity">
         <option value="all">همهٔ ایران (سراسری)</option>
-        <option value="تهران">فقط تهران</option>
-        <option value="تبریز">فقط تبریز</option>
-        <option value="مشهد">فقط مشهد</option>
-        <option value="اصفهان">فقط اصفهان</option>
+        <option value="تهران">تهران</option>
+        <option value="مشهد">مشهد</option>
+        <option value="اصفهان">اصفهان</option>
+        <option value="کرج">کرج</option>
+        <option value="شیراز">شیراز</option>
+        <option value="تبریز">تبریز</option>
+        <option value="قم">قم</option>
+        <option value="اهواز">اهواز</option>
+        <option value="کرمانشاه">کرمانشاه</option>
+        <option value="ارومیه">ارومیه</option>
+        <option value="رشت">رشت</option>
+        <option value="زاهدان">زاهدان</option>
+        <option value="همدان">همدان</option>
+        <option value="کرمان">کرمان</option>
+        <option value="یزد">یزد</option>
+        <option value="اردبیل">اردبیل</option>
+        <option value="بندرعباس">بندرعباس</option>
+        <option value="اراک">اراک</option>
+        <option value="زنجان">زنجان</option>
+        <option value="سنندج">سنندج</option>
+        <option value="قزوین">قزوین</option>
+        <option value="خرم‌آباد">خرم‌آباد</option>
+        <option value="گرگان">گرگان</option>
+        <option value="ساری">ساری</option>
+        <option value="بجنورد">بجنورد</option>
+        <option value="بیرجند">بیرجند</option>
+        <option value="شهرکرد">شهرکرد</option>
+        <option value="یاسوج">یاسوج</option>
+        <option value="ایلام">ایلام</option>
+        <option value="سمنان">سمنان</option>
       </select>
 
       <label>نوع لینک</label>
@@ -63,7 +95,7 @@
       <label>آدرس لینک یا شماره تلفن</label>
       <input type="text" id="actionValue" placeholder="مثلا: https://t.me/yourchannel">
 
-      <button class="btn-primary" onclick="addBanner()">🚀 ثبت و انتشار بنر</button>
+      <button class="btn-primary" id="submitBtn" onclick="addBanner()">🚀 ثبت و انتشار بنر</button>
     </div>
   </div>
 
@@ -74,7 +106,7 @@
     </div>
   </div>
 
-  <!-- بخش ۳: مدیریت ارتباطات (پویا) -->
+  <!-- بخش ۳: مدیریت ارتباطات -->
   <div id="tab-contact" class="tab-content">
     <div class="card">
       <h3 style="margin-bottom: 16px; color: var(--primary);">افزودن کادر ارتباطی جدید</h3>
