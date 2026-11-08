@@ -1,149 +1,33 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>پنل مدیریت ویاپزشک</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-</head>
-<body>
-  <div class="app-header">
-    <h1>پنل مدیریت ویاپزشک</h1>
-    <span class="user-name" id="userName">مدیر</span>
-  </div>
-
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('add')">➕ بنر جدید</button>
-    <button class="tab" onclick="switchTab('list')">📋 لیست بنرها</button>
-    <button class="tab" onclick="switchTab('contact')">📞 ارتباطات</button>
-  </div>
-
-  <!-- بخش ۱: افزودن بنر -->
-  <div id="tab-add" class="tab-content active">
-    <div class="card">
-      <label>جایگاه نمایش (کجا دیده شود؟)</label>
+<label>جایگاه نمایش (کجا دیده شود؟)</label>
       <select id="bannerPosition">
-        <option value="home_main">صفحه اصلی</option>
+        <option value="home_main">صفحه اصلی (کاروسل)</option>
         <option value="home_bottom">پایین صفحه اصلی</option>
+        
+        <option disabled>--- آناتومی و تخصص‌ها ---</option>
+        <option value="page_brain">مغز و اعصاب</option>
+        <option value="page_eye">چشم و بینایی</option>
+        <option value="page_ent">گوش، حلق و بینی</option>
+        <option value="page_dental">دهان و دندان</option>
+        <option value="page_heart">قلب و ریه</option>
+        <option value="page_gastro">معده و گوارش</option>
+        <option value="page_urology">کلیه و مجاری ادراری</option>
+        <option value="page_reproductive">دستگاه تناسلی و باروری</option>
+        <option value="page_ortho">استخوان، مفاصل و کمر</option>
+        <option value="page_skin">پوست و مو</option>
+        <option value="page_endocrine">غدد و خون</option>
+        <option value="page_psychiatry">روان‌پزشکی</option>
+        <option value="page_oncology">خون و سرطان</option>
+        
+        <option disabled>--- عوامل بیماری‌زا ---</option>
+        <option value="page_viruses">ویروس‌ها (مثل HPV)</option>
+        <option value="page_bacteria">باکتری‌ها</option>
+        <option value="page_fungi">قارچ‌ها</option>
+        <option value="page_parasites">انگل‌ها</option>
+        
+        <option disabled>--- بخش‌های دیگر ---</option>
+        <option value="page_drugs">داروها</option>
         <option value="lab_calculator">صفحه تفسیر آزمایش</option>
         <option value="pregnancy">صفحه بارداری</option>
-        <option value="anatomy">صفحه آناتومی</option>
-        <option value="pathogens">صفحه عوامل بیماری‌زا</option>
-        <option value="pediatrics">صفحه کودکان</option>
-        <option value="page_hpv">صفحه HPV</option>
-        <option value="page_hair_loss">صفحه ریزش مو</option>
-        <option value="page_migraine">صفحه میگرن</option>
-        <option value="page_reflux">صفحه رفلاکس معده</option>
+        <option value="page_pediatrics">صفحه کودکان</option>
+        <option value="page_first_aid">کمک‌های اولیه</option>
       </select>
-
-      <label>عکس بنر (از گالری انتخاب کنید)</label>
-      <input type="file" id="bannerImageFile" accept="image/*" style="background:#fff; padding:10px; border-radius:10px; border:1px dashed var(--primary);">
-      <div style="text-align:center; font-size:12px; color:#888; margin: 8px 0;">یا لینک عکس را وارد کنید</div>
-      <input type="text" id="bannerImage" placeholder="https://example.com/image.jpg">
-
-      <label>عنوان بنر</label>
-      <input type="text" id="bannerTitle" placeholder="مثلا: کلینیک تخصصی دندانپزشکی">
-
-      <label>زیرنویس</label>
-      <input type="text" id="bannerSubtitle" placeholder="مثلا: تهران، خیابان ولیعصر">
-
-      <label>رنگ پس‌زمینه (اگر عکس نداری)</label>
-      <input type="color" id="bannerColor" value="#0a7c7c">
-
-      <label>شهرها (برای چه شهرهایی نمایش داده شود؟)</label>
-      <select id="bannerCity">
-        <option value="all">همهٔ ایران (سراسری)</option>
-        <option value="تهران">تهران</option>
-        <option value="مشهد">مشهد</option>
-        <option value="اصفهان">اصفهان</option>
-        <option value="کرج">کرج</option>
-        <option value="شیراز">شیراز</option>
-        <option value="تبریز">تبریز</option>
-        <option value="قم">قم</option>
-        <option value="اهواز">اهواز</option>
-        <option value="کرمانشاه">کرمانشاه</option>
-        <option value="ارومیه">ارومیه</option>
-        <option value="رشت">رشت</option>
-        <option value="زاهدان">زاهدان</option>
-        <option value="همدان">همدان</option>
-        <option value="کرمان">کرمان</option>
-        <option value="یزد">یزد</option>
-        <option value="اردبیل">اردبیل</option>
-        <option value="بندرعباس">بندرعباس</option>
-        <option value="اراک">اراک</option>
-        <option value="زنجان">زنجان</option>
-        <option value="سنندج">سنندج</option>
-        <option value="قزوین">قزوین</option>
-        <option value="خرم‌آباد">خرم‌آباد</option>
-        <option value="گرگان">گرگان</option>
-        <option value="ساری">ساری</option>
-        <option value="بجنورد">بجنورد</option>
-        <option value="بیرجند">بیرجند</option>
-        <option value="شهرکرد">شهرکرد</option>
-        <option value="یاسوج">یاسوج</option>
-        <option value="ایلام">ایلام</option>
-        <option value="سمنان">سمنان</option>
-      </select>
-
-      <label>نوع لینک</label>
-      <select id="actionType">
-        <option value="url">لینک وب‌سایت / تلگرام</option>
-        <option value="tel">شماره تماس (تلفن)</option>
-      </select>
-
-      <label>آدرس لینک یا شماره تلفن</label>
-      <input type="text" id="actionValue" placeholder="مثلا: https://t.me/yourchannel">
-
-      <button class="btn-primary" id="submitBtn" onclick="addBanner()">🚀 ثبت و انتشار بنر</button>
-    </div>
-  </div>
-
-  <!-- بخش ۲: لیست بنرها -->
-  <div id="tab-list" class="tab-content">
-    <div class="card">
-      <p style="text-align: center; color: #666;">لیست بنرها اینجا نمایش داده می‌شود...</p>
-    </div>
-  </div>
-
-  <!-- بخش ۳: مدیریت ارتباطات -->
-  <div id="tab-contact" class="tab-content">
-    <div class="card">
-      <h3 style="margin-bottom: 16px; color: var(--primary);">افزودن کادر ارتباطی جدید</h3>
-      
-      <label>آیکون کادر</label>
-      <select id="contactIcon">
-        <option value="Send">تلگرام (Send)</option>
-        <option value="Phone">تماس تلفنی (Phone)</option>
-        <option value="PlayArrow">یوتیوب (PlayArrow)</option>
-        <option value="CameraAlt">اینستاگرام (CameraAlt)</option>
-        <option value="Language">وب‌سایت (Language)</option>
-        <option value="Star">سایر (Star)</option>
-      </select>
-
-      <label>عنوان کادر</label>
-      <input type="text" id="contactTitle" placeholder="مثلا: کانال یوتیوب ما">
-
-      <label>مقدار (لینک یا شماره تلفن)</label>
-      <input type="text" id="contactValue" placeholder="مثلا: https://youtube.com/...">
-
-      <label>نوع عملکرد</label>
-      <select id="contactType">
-        <option value="url">باز کردن لینک</option>
-        <option value="tel">تماس تلفنی</option>
-      </select>
-
-      <button class="btn-primary" onclick="addContactItem()" style="background: #4CAF50; box-shadow: none;">➕ افزودن به لیست</button>
-      
-      <hr style="margin: 24px 0; border: none; border-top: 1px solid #eee;">
-
-      <h3 style="margin-bottom: 16px; color: var(--primary);">کادرهای فعلی</h3>
-      <div id="contactPreviewList" style="margin-bottom: 16px;"></div>
-
-      <button class="btn-primary" onclick="saveAllContacts()">🚀 ذخیره نهایی و ارسال به اپ</button>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
-</body>
-</html>
