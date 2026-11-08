@@ -9,6 +9,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -42,7 +44,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.viapezeshk.app.data.Banner
+import com.viapezeshk.app.data.ContactItem
 import com.viapezeshk.app.data.Disease
 import com.viapezeshk.app.ui.theme.*
 import kotlinx.coroutines.delay
@@ -156,6 +160,7 @@ fun BannerCarousel(banners: List<Banner>) {
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxWidth().height(160.dp)) { page ->
             val banner = banners[page]
             val bgColor = try { Color(android.graphics.Color.parseColor(banner.content.bgColor ?: "#1E2A38")) } catch (e: Exception) { Color(0xFF1E2A38) }
+            
             Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp)).background(bgColor).clickable {
                 banner.action?.let { action ->
                     when (action.type) {
@@ -164,7 +169,18 @@ fun BannerCarousel(banners: List<Banner>) {
                     }
                 }
             }) {
-                Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Center) {
+                if (!banner.content.image.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = banner.content.image,
+                        contentDescription = banner.content.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                
+                Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)))))
+
+                Column(modifier = Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Bottom) {
                     Text(text = banner.content.title ?: "", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Text(text = banner.content.subtitle ?: "", color = Color(0xFFD1D1D6), fontSize = 14.sp)
                 }
@@ -327,19 +343,69 @@ fun SearchScreen(navController: NavController, viewModel: DiseaseViewModel = vie
     }
 }
 
+fun getContactIcon(iconName: String): ImageVector {
+    return when(iconName) {
+        "Send" -> Icons.Default.Send
+        "Phone" -> Icons.Default.Phone
+        "PlayArrow" -> Icons.Default.PlayArrow
+        "CameraAlt" -> Icons.Default.CameraAlt
+        "Language" -> Icons.Default.Language
+        else -> Icons.Default.Star
+    }
+}
+
+// ======== صفحه ارتباط با ما (پویا) ========
 @Composable
-fun ContactScreen(navController: NavController) {
+fun ContactScreen(navController: NavController, viewModel: ContactViewModel = viewModel()) {
+    val context = LocalContext.current
+    val contacts by viewModel.contacts.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadContacts()
+    }
+
     Scaffold(topBar = { TopAppBar(title = { Text("ارتباط با ما", fontWeight = FontWeight.Bold) }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, bottomBar = { BottomNavBar(navController) }, containerColor = BackgroundLight) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(modifier = Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
+            
             Box(modifier = Modifier.size(100.dp).clip(CircleShape).background(PrimaryTeal.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) { Icon(Icons.Default.SupportAgent, contentDescription = null, tint = PrimaryTeal, modifier = Modifier.size(50.dp)) }
             Spacer(modifier = Modifier.height(16.dp))
             Text("پشتیبانی و ارتباط", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
             Spacer(modifier = Modifier.height(8.dp))
-            Text("برای سفارش تبلیغات یا ارتباط با ما، از راه‌های زیر استفاده کنید:", color = TextSecondary, textAlign = TextAlign.Center)
+            Text("برای ارتباط با ما یا سفارش تبلیغات، از راه‌های زیر استفاده کنید:", color = TextSecondary, textAlign = TextAlign.Center)
             Spacer(modifier = Modifier.height(24.dp))
-            Button(onClick = { }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal), shape = RoundedCornerShape(12.dp)) { Icon(Icons.Default.Send, contentDescription = null); Spacer(modifier = Modifier.width(8.dp)); Text("تلگرام پشتیبانی", fontWeight = FontWeight.Bold) }
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(onClick = { }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = SurfaceWhite, contentColor = PrimaryTeal), shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryTeal)) { Icon(Icons.Default.Phone, contentDescription = null); Spacer(modifier = Modifier.width(8.dp)); Text("تماس تلفنی", fontWeight = FontWeight.Bold) }
+
+            if (contacts.isEmpty()) {
+                CircularProgressIndicator(color = PrimaryTeal)
+            } else {
+                contacts.forEach { contact ->
+                    Button(
+                        onClick = {
+                            when (contact.type) {
+                                "url" -> {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(contact.value))
+                                    context.startActivity(intent)
+                                }
+                                "tel" -> {
+                                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${contact.value}"))
+                                    context.startActivity(intent)
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(55.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = SurfaceWhite,
+                            contentColor = PrimaryTeal
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, PrimaryTeal)
+                    ) {
+                        Icon(getContactIcon(contact.icon), contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(contact.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
         }
     }
 }
@@ -349,7 +415,7 @@ fun SettingsScreen(navController: NavController) {
     val context = LocalContext.current
     var currentCity by remember { mutableStateOf(getUserCity(context)) }
     var expanded by remember { mutableStateOf(false) }
-    val cities = listOf("همهٔ ایران", "تهران", "تبریز", "مشهد", "اصفهان", "شیراز", "کرج", "اهواز", "قم", "رشت")
+    val cities = listOf("همهٔ ایران", "تهران", "مشهد", "اصفهان", "کرج", "شیراز", "تبریز", "قم", "اهواز", "کرمانشاه", "ارومیه", "رشت", "زاهدان", "همدان", "کرمان", "یزد", "اردبیل", "بندرعباس", "اراک", "زنجان", "سنندج", "قزوین", "خرم‌آباد", "گرگان", "ساری", "بجنورد", "بیرجند", "شهرکرد", "یاسوج", "ایلام", "سمنان")
 
     Scaffold(topBar = { TopAppBar(title = { Text("تنظیمات", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, containerColor = BackgroundLight) { padding ->
         Column(modifier = Modifier.padding(padding).padding(16.dp)) {
