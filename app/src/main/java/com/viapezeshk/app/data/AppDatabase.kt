@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Disease::class, Drug::class], version = 6, exportSchema = false)
+@Database(entities = [Disease::class, Drug::class], version = 8, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun diseaseDao(): DiseaseDao
