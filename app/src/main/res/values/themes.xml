@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ViaPezeshk.Splash" parent="Theme.SplashScreen">
+        <!-- رنگ پس‌زمینه اسپلش (همون رنگ فیروزه‌ای برند) -->
+        <item name="windowSplashScreenBackground">#0a7c7c</item>
+        <!-- آیکونی که وسط اسپلش نشون داده میشه -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <!-- تمی که بعد از اسپلش به اپ اعمال میشه -->
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
+    </style>
+</resources>
