@@ -3,7 +3,6 @@ import json
 import base64
 import requests
 import logging
-import asyncio
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from telegram import Update
@@ -14,14 +13,11 @@ logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "YOUR_TELEGRAM_TOKEN")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "YOUR_GITHUB_TOKEN")
-# گرفتن آیدی عددی مدیر از تنظیمات رندر
 ADMIN_ID = int(os.environ.get("ADMIN_ID", "0"))
 
 GITHUB_USER = "aliafshartm-star"
 GITHUB_REPO = "viapezeshk"
-GITHUB_FILE_PATH = "data/config.json"
-
-GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents/{GITHUB_FILE_PATH}"
+API_BASE_URL = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents"
 
 HEADERS = {
     "Authorization": f"token {GITHUB_TOKEN}",
@@ -41,19 +37,16 @@ def run_dummy_server():
     logger.info(f"Fake server started on port {port}")
     server.serve_forever()
 
-# ======== دستور شروع با امنیت ========
+# ======== دستور شروع ========
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    
-    # چک کردن اینکه فقط مدیر به ربات دسترسی داره
     if user_id != ADMIN_ID:
         await update.message.reply_text("⛔ شما دسترسی به این ربات ندارید.")
         return
 
     await update.message.reply_text(
         "سلام مدیر عزیز! 👋\n"
-        "به ربات مدیریت ویاپزشک خوش آمدید.\n"
-        "برای باز کردن پنل مدیریت، روی دکمه زیر بزنید:",
+        "به ربات مدیریت ویاپزشک خوش آمدید.",
         reply_markup={
             "inline_keyboard": [[
                 {"text": "🚀 باز کردن پنل مدیریت", "web_app": {"url": "https://aliafshartm-star.github.io/viapezeshk/miniapp/"}}
@@ -61,44 +54,74 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
     )
 
-# ======== دریافت اطلاعات از مینی‌اپ (با امنیت) ========
+# ======== تابع کمکی برای آپدیت فایل در گیت‌هاب ========
+def update_github_file(file_path, new_content_json, commit_message):
+    url = f"{API_BASE_URL}/{file_path}"
+    response = requests.get(url, headers=HEADERS)
+    
+    sha = None
+    if response.status_code == 200:
+        sha = response.json()['sha']
+    elif response.status_code != 404:
+        # خطایی به جز "فایل وجود ندارد"
+        return False, f"خطا در خواندن فایل: {response.status_code}"
+
+    updated_content = json.dumps(new_content_json, indent=2, ensure_ascii=False)
+    content_base64 = base64.b64encode(updated_content.encode('utf-8')).decode('utf-8')
+
+    payload = {
+        "message": commit_message,
+        "content": content_base64
+    }
+    if sha:
+        payload["sha"] = sha
+
+    put_response = requests.put(url, headers=HEADERS, json=payload)
+    return put_response.status_code in [200, 201], put_response.status_code
+
+# ======== دریافت اطلاعات از مینی‌اپ ========
 async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # چک مجدد امنیتی که کسی نتونه دیتای جعلی بفرسته
     if update.effective_user.id != ADMIN_ID:
         return
 
     try:
-        data = json.loads(update.effective_message.web_app_data.data)
-        await update.message.reply_text("⏳ در حال پردازش و ارسال به گیت‌هاب...")
-        
-        response = requests.get(GITHUB_API_URL, headers=HEADERS)
-        if response.status_code != 200:
-            await update.message.reply_text("❌ خطا در خواندن فایل از گیت‌هاب.")
-            return
+        payload = json.loads(update.effective_message.web_app_data.data)
+        action = payload.get("action")
+        data = payload.get("data")
 
-        file_info = response.json()
-        sha = file_info['sha']
-        content_base64 = file_info['content']
-        content_json = json.loads(base64.b64decode(content_base64).decode('utf-8'))
-        
-        content_json['banners'].append(data)
-        
-        updated_content = json.dumps(content_json, indent=2, ensure_ascii=False)
-        updated_content_base64 = base64.b64encode(updated_content.encode('utf-8')).decode('utf-8')
-        
-        payload = {
-            "message": f"Update banner from Telegram: {data['id']}",
-            "content": updated_content_base64,
-            "sha": sha
-        }
-        
-        put_response = requests.put(GITHUB_API_URL, headers=HEADERS, json=payload)
-        
-        if put_response.status_code == 200:
-            await update.message.reply_text(f"✅ بنر «{data['content']['title']}» با موفقیت در گیت‌هاب ثبت شد!")
-        else:
-            await update.message.reply_text(f"❌ خطا در ذخیره در گیت‌هاب: {put_response.status_code}")
+        await update.message.reply_text("⏳ در حال پردازش و ارسال به گیت‌هاب...")
+
+        # ---- حالت اول: ثبت بنر جدید ----
+        if action == "add_banner":
+            # خواندن فایل config.json فعلی
+            url = f"{API_BASE_URL}/data/config.json"
+            res = requests.get(url, headers=HEADERS)
+            if res.status_code != 200:
+                await update.message.reply_text("❌ خطا در خواندن config.json")
+                return
             
+            config_json = json.loads(base64.b64decode(res.json()['content']).decode('utf-8'))
+            config_json['banners'].append(data)
+            
+            # ذخیره فایل
+            success, code = update_github_file("data/config.json", config_json, f"Add banner: {data['id']}")
+            
+            if success:
+                await update.message.reply_text(f"✅ بنر «{data['content']['title']}» با موفقیت ثبت شد!")
+            else:
+                await update.message.reply_text(f"❌ خطا در ذخیره بنر. کد: {code}")
+
+        # ---- حالت دوم: آپدیت ارتباطات ----
+        elif action == "update_contacts":
+            contact_data = {"contacts": data} # ساختار فایل جدید
+            
+            success, code = update_github_file("data/contact.json", contact_data, "Update contact links")
+            
+            if success:
+                await update.message.reply_text("✅ لیست ارتباطات با موفقیت آپدیت شد!")
+            else:
+                await update.message.reply_text(f"❌ خطا در ذخیره ارتباطات. کد: {code}")
+
     except Exception as e:
         logger.error(f"Error: {e}")
         await update.message.reply_text("❌ خطایی رخ داد. لطفاً دوباره تلاش کنید.")
@@ -106,7 +129,6 @@ async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE
 # ======== اجرای ربات ========
 def main():
     threading.Thread(target=run_dummy_server, daemon=True).start()
-
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_web_app_data))
