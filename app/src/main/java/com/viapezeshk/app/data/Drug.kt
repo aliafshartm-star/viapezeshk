@@ -11,5 +11,6 @@ data class Drug(
     val category: String,
     val usage: String,
     val sideEffects: String,
-    val warnings: String
+    val warnings: String,
+    val isBookmarked: Boolean = false // فیلد جدید
 )
