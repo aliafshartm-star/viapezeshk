@@ -275,4 +275,289 @@ fun CategoryDiseasesScreen(navController: NavController, categoryName: String, v
         topBar = { TopAppBar(title = { Text(categoryName, fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) },
         containerColor = BackgroundLight
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16
+        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+            if (filteredDiseases.isEmpty()) {
+                Text("در حال بارگذاری یا بیماری‌ای در این دسته یافت نشد.", color = TextSecondary)
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    filteredDiseases.forEach { disease -> 
+                        DiseaseListItem(disease = disease, onClick = { navController.navigate("disease_detail/${disease.id}") }) 
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun getIconFromName(name: String): ImageVector {
+    return when (name) {
+        "Coronavirus" -> Icons.Default.Coronavirus
+        "Face" -> Icons.Default.Face
+        "Psychology" -> Icons.Default.Psychology
+        "Fastfood" -> Icons.Default.Fastfood
+        "Favorite" -> Icons.Default.Favorite
+        else -> Icons.Default.Coronavirus
+    }
+}
+
+@Composable
+fun DiseaseListItem(disease: Disease, onClick: () -> Unit = {}) {
+    Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(SurfaceWhite).clickable { onClick() }.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(PrimaryTeal.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
+            Icon(imageVector = getIconFromName(disease.iconName), contentDescription = null, tint = PrimaryTeal)
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = disease.title, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text(text = disease.subtitle, fontSize = 12.sp, color = TextSecondary)
+        }
+        Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null, tint = TextSecondary)
+    }
+}
+
+@Composable
+fun BottomNavBar(navController: NavController) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    NavigationBar(containerColor = SurfaceWhite, tonalElevation = 8.dp) {
+        NavigationBarItem(icon = { Icon(Icons.Filled.Home, contentDescription = "خانه") }, label = { Text("خانه", fontSize = 11.sp) }, selected = currentRoute == "home", onClick = { if (currentRoute != "home") navController.navigate("home") { popUpTo("home") { inclusive = true } } }, colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryTeal, selectedTextColor = PrimaryTeal, indicatorColor = PrimaryTeal.copy(alpha = 0.1f), unselectedIconColor = TextSecondary, unselectedTextColor = TextSecondary))
+        NavigationBarItem(icon = { Icon(Icons.Filled.Search, contentDescription = "جستجو") }, label = { Text("جستجو", fontSize = 11.sp) }, selected = currentRoute == "search", onClick = { if (currentRoute != "search") navController.navigate("search") }, colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryTeal, selectedTextColor = PrimaryTeal, indicatorColor = PrimaryTeal.copy(alpha = 0.1f), unselectedIconColor = TextSecondary, unselectedTextColor = TextSecondary))
+        NavigationBarItem(icon = { Icon(Icons.Filled.Star, contentDescription = "نشان‌ها") }, label = { Text("نشان‌ها", fontSize = 11.sp) }, selected = currentRoute == "bookmarks", onClick = { if (currentRoute != "bookmarks") navController.navigate("bookmarks") }, colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryTeal, selectedTextColor = PrimaryTeal, indicatorColor = PrimaryTeal.copy(alpha = 0.1f), unselectedIconColor = TextSecondary, unselectedTextColor = TextSecondary))
+        NavigationBarItem(icon = { Icon(Icons.Filled.Phone, contentDescription = "ارتباط") }, label = { Text("ارتباط", fontSize = 11.sp) }, selected = currentRoute == "contact", onClick = { if (currentRoute != "contact") navController.navigate("contact") }, colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryTeal, selectedTextColor = PrimaryTeal, indicatorColor = PrimaryTeal.copy(alpha = 0.1f), unselectedIconColor = TextSecondary, unselectedTextColor = TextSecondary))
+    }
+}
+
+@Composable
+fun PregnancyScreen(navController: NavController) {
+    var showDatePicker by remember { mutableStateOf(false) }
+    var selectedDateMillis by remember { mutableStateOf<Long?>(null) }
+    var resultText by remember { mutableStateOf("") }
+    val datePickerState = rememberDatePickerState()
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = { TextButton(onClick = { selectedDateMillis = datePickerState.selectedDateMillis; showDatePicker = false }) { Text("تایید") } },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("لغو") } }
+        ) { DatePicker(state = datePickerState) }
+    }
+
+    Scaffold(topBar = { TopAppBar(title = { Text("بارداری", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, containerColor = BackgroundLight) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState())) {
+            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(SurfaceWhite).padding(20.dp)) {
+                Column {
+                    Text("ماشین حساب بارداری", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("تاریخ اولین روز آخرین پریود خود را انتخاب کنید:", fontSize = 14.sp, color = TextSecondary)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal.copy(alpha = 0.1f), contentColor = PrimaryTeal), shape = RoundedCornerShape(12.dp)) { Icon(Icons.Default.DateRange, contentDescription = null); Spacer(modifier = Modifier.width(8.dp)); Text("انتخاب تاریخ", fontWeight = FontWeight.Bold) }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = {
+                        selectedDateMillis?.let { millis ->
+                            val lmpDate = Date(millis)
+                            val calendar = Calendar.getInstance()
+                            calendar.time = lmpDate
+                            calendar.add(Calendar.DAY_OF_YEAR, 280)
+                            val eddDate = calendar.time
+                            val format = SimpleDateFormat("yyyy/MM/dd", Locale("fa"))
+                            val lmpStr = format.format(lmpDate)
+                            val eddStr = format.format(eddDate)
+                            val diff = System.currentTimeMillis() - millis
+                            val days = TimeUnit.MILLISECONDS.toDays(diff).toInt()
+                            val weeks = days / 7
+                            resultText = "تاریخ آخرین پریود: $lmpStr\nتاریخ تقریبی زایمان: $eddStr\nشما در هفته $weeks بارداری هستید."
+                        }
+                    }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal), shape = RoundedCornerShape(12.dp)) { Text("محاسبه تاریخ زایمان", fontWeight = FontWeight.Bold) }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            if (resultText.isNotEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color(0xFFE8F8F5)).padding(16.dp)) { Text(text = resultText, color = Color(0xFF0E6655), fontWeight = FontWeight.Bold, lineHeight = 24.sp) }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Text("راهنمای سه‌ماهه‌ها", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(modifier = Modifier.height(12.dp))
+            Card(colors = CardDefaults.cardColors(containerColor = SurfaceWhite), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) { Column(modifier = Modifier.padding(16.dp)) { Text("سه‌ماهه اول (هفته ۱ تا ۱۳)", fontWeight = FontWeight.Bold, color = PrimaryTeal); Text("علائم: تهوع، خستگی. تغذیه: اسید فولیک. پرهیز از گوشت خام.", fontSize = 13.sp, color = TextSecondary) } }
+            Spacer(modifier = Modifier.height(8.dp))
+            Card(colors = CardDefaults.cardColors(containerColor = SurfaceWhite), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) { Column(modifier = Modifier.padding(16.dp)) { Text("سه‌ماهه دوم (هفته ۱۴ تا ۲۷)", fontWeight = FontWeight.Bold, color = PrimaryTeal); Text("کاهش تهوع، شروع حرکت جنین. آزمایش قند بارداری در هفته ۲۴-۲۸.", fontSize = 13.sp, color = TextSecondary) } }
+            Spacer(modifier = Modifier.height(8.dp))
+            Card(colors = CardDefaults.cardColors(containerColor = SurfaceWhite), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) { Column(modifier = Modifier.padding(16.dp)) { Text("سه‌ماهه سوم (هفته ۲۸ تا زایمان)", fontWeight = FontWeight.Bold, color = PrimaryTeal); Text("شمارش حرکات جنین، آمادگی زایمان. علائم خطر: خونریزی، درد شدید.", fontSize = 13.sp, color = TextSecondary) } }
+        }
+    }
+}
+
+@Composable
+fun SearchScreen(navController: NavController, viewModel: DiseaseViewModel = viewModel()) {
+    val diseases by viewModel.diseases.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredDiseases = diseases.filter { it.title.contains(searchQuery, ignoreCase = true) || it.subtitle.contains(searchQuery, ignoreCase = true) }
+
+    Scaffold(topBar = { TopAppBar(title = { Text("جستجو", fontWeight = FontWeight.Bold) }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, bottomBar = { BottomNavBar(navController) }, containerColor = BackgroundLight) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+            OutlinedTextField(value = searchQuery, onValueChange = { searchQuery = it }, placeholder = { Text("نام بیماری را وارد کنید...") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite))
+            Spacer(modifier = Modifier.height(16.dp))
+            if (filteredDiseases.isEmpty() && searchQuery.isNotEmpty()) { Text("نتیجه‌ای یافت نشد.", color = TextSecondary) }
+            else { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { filteredDiseases.forEach { disease -> DiseaseListItem(disease = disease, onClick = { navController.navigate("disease_detail/${disease.id}") }) } } }
+        }
+    }
+}
+
+fun getContactIcon(iconName: String): ImageVector {
+    return when(iconName) {
+        "Send" -> Icons.Default.Send
+        "Phone" -> Icons.Default.Phone
+        "PlayArrow" -> Icons.Default.PlayArrow
+        "CameraAlt" -> Icons.Default.CameraAlt
+        "Language" -> Icons.Default.Language
+        else -> Icons.Default.Star
+    }
+}
+
+@Composable
+fun ContactScreen(navController: NavController, viewModel: ContactViewModel = viewModel()) {
+    val context = LocalContext.current
+    val contacts by viewModel.contacts.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadContacts()
+    }
+
+    Scaffold(topBar = { TopAppBar(title = { Text("ارتباط با ما", fontWeight = FontWeight.Bold) }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, bottomBar = { BottomNavBar(navController) }, containerColor = BackgroundLight) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
+            
+            Box(modifier = Modifier.size(100.dp).clip(CircleShape).background(PrimaryTeal.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) { Icon(Icons.Default.SupportAgent, contentDescription = null, tint = PrimaryTeal, modifier = Modifier.size(50.dp)) }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("پشتیبانی و ارتباط", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("برای ارتباط با ما یا سفارش تبلیغات، از راه‌های زیر استفاده کنید:", color = TextSecondary, textAlign = TextAlign.Center)
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (contacts.isEmpty()) {
+                CircularProgressIndicator(color = PrimaryTeal)
+            } else {
+                contacts.forEach { contact ->
+                    Button(
+                        onClick = {
+                            when (contact.type) {
+                                "url" -> context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(contact.value)))
+                                "tel" -> context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${contact.value}")))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(55.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = SurfaceWhite, contentColor = PrimaryTeal),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, PrimaryTeal)
+                    ) {
+                        Icon(getContactIcon(contact.icon), contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(contact.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SettingsScreen(navController: NavController) {
+    val context = LocalContext.current
+    var currentCity by remember { mutableStateOf(getUserCity(context)) }
+    var expanded by remember { mutableStateOf(false) }
+    val cities = listOf("همهٔ ایران", "تهران", "مشهد", "اصفهان", "کرج", "شیراز", "تبریز", "قم", "اهواز", "کرمانشاه", "ارومیه", "رشت", "زاهدان", "همدان", "کرمان", "یزد", "اردبیل", "بندرعباس", "اراک", "زنجان", "سنندج", "قزوین", "خرم‌آباد", "گرگان", "ساری", "بجنورد", "بیرجند", "شهرکرد", "یاسوج", "ایلام", "سمنان")
+
+    Scaffold(topBar = { TopAppBar(title = { Text("تنظیمات", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, containerColor = BackgroundLight) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+            Text("انتخاب شهر (برای تبلیغات هدفمند):", fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                OutlinedTextField(value = currentCity, onValueChange = {}, readOnly = true, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.menuAnchor().fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite))
+                ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    cities.forEach { city -> DropdownMenuItem(text = { Text(city) }, onClick = { currentCity = city; saveUserCity(context, city); expanded = false }) }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Text("نسخه اپ: ۱.۰.۰", color = TextSecondary)
+        }
+    }
+}
+
+@Composable
+fun DiseaseDetailScreen(
+    navController: NavController, 
+    diseaseId: String, 
+    viewModel: DiseaseViewModel = viewModel(),
+    bannerViewModel: BannerViewModel = viewModel()
+) {
+    val context = LocalContext.current
+    val diseases by viewModel.diseases.collectAsState()
+    val disease = diseases.find { it.id == diseaseId }
+    
+    val banners by bannerViewModel.banners.collectAsState()
+    LaunchedEffect(diseaseId) {
+        val userCity = getUserCity(context)
+        bannerViewModel.loadBanners("page_$diseaseId", userCity)
+    }
+
+    Scaffold(topBar = { TopAppBar(title = { Text(disease?.title ?: "جزئیات", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, containerColor = BackgroundLight) { padding ->
+        if (disease == null) { Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryTeal) } }
+        else {
+            Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize().verticalScroll(rememberScrollState())) {
+                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(PrimaryTeal.copy(alpha = 0.1f)).padding(16.dp)) { Column { Text(disease.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimaryTeal); Text(disease.subtitle, color = TextPrimary) } }
+                Spacer(modifier = Modifier.height(16.dp))
+                BannerCarousel(banners = banners)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = disease.content, fontSize = 15.sp, lineHeight = 24.sp, color = TextPrimary)
+            }
+        }
+    }
+}
+
+data class LabTest(val name: String, val unit: String, val min: Float, val max: Float, val lowMsg: String, val highMsg: String, val borderlineMax: Float = 0f, val borderlineMsg: String = "")
+
+val labTests = listOf(
+    LabTest("هموگلوبین (Hb)", "g/dL", 12f, 16f, "احتمال کم‌خونی (فقر آهن).", "ممکن است کم‌آبی باشد."),
+    LabTest("قند خون ناشتا (FBS)", "mg/dL", 70f, 99f, "افت قند خون.", "احتمال دیابت.", 125f, "شما در مرحله پیش‌دیابت هستید."),
+    LabTest("کلسترول تام", "mg/dL", 0f, 200f, "معمولاً مشکلی نیست.", "کلسترول بالا، ریسک بیماری قلبی.", 239f, "کلسترول مرزی.")
+)
+
+@Composable
+fun LabCalculatorScreen(navController: NavController) {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedTest by remember { mutableStateOf(labTests[0]) }
+    var inputValue by remember { mutableStateOf("") }
+    var resultText by remember { mutableStateOf("") }
+    var resultColor by remember { mutableStateOf(Color.Transparent) }
+    var resultTextColor by remember { mutableStateOf(Color.Transparent) }
+    Scaffold(topBar = { TopAppBar(title = { Text("تفسیر بالینی", fontWeight = FontWeight.Bold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowForward, contentDescription = "بازگشت") } }, colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)) }, containerColor = BackgroundLight) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+            ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                OutlinedTextField(value = selectedTest.name, onValueChange = {}, readOnly = true, label = { Text("نوع آزمایش") }, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }, modifier = Modifier.menuAnchor().fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite))
+                ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) { labTests.forEach { test -> DropdownMenuItem(text = { Text(test.name) }, onClick = { selectedTest = test; expanded = false; resultText = "" }) } }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(value = inputValue, onValueChange = { inputValue = it }, label = { Text("مقدار (${selectedTest.unit})") }, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = SurfaceWhite, unfocusedContainerColor = SurfaceWhite))
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                val valFloat = inputValue.toFloatOrNull()
+                if (valFloat != null) {
+                    when {
+                        valFloat < selectedTest.min -> { resultText = "پایین‌تر از حد نرمال:\n${selectedTest.lowMsg}"; resultColor = Color(0xFFFDECEA); resultTextColor = Color(0xFFC0392B) }
+                        valFloat > selectedTest.max -> { if (selectedTest.borderlineMax > 0f && valFloat <= selectedTest.borderlineMax) { resultText = "مرزی (نیاز به توجه):\n${selectedTest.borderlineMsg}"; resultColor = Color(0xFFFEF9E7); resultTextColor = Color(0xFFF39C12) } else { resultText = "بالاتر از حد نرمال:\n${selectedTest.highMsg}"; resultColor = Color(0xFFFDECEA); resultTextColor = Color(0xFFC0392B) } }
+                        else -> { resultText = "طبیعی (نرمال):\nمقدار شما در محدوده طبیعی است."; resultColor = Color(0xFFE8F8F5); resultTextColor = Color(0xFF27AE60) }
+                    }
+                }
+            }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal), shape = RoundedCornerShape(12.dp)) { Text("تفسیر کن", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+            Spacer(modifier = Modifier.height(24.dp))
+            if (resultText.isNotEmpty()) { Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(resultColor).padding(16.dp)) { Text(text = resultText, color = resultTextColor, fontWeight = FontWeight.Bold, fontSize = 15.sp) } }
+        }
+    }
+}
+
+@Composable
+fun PlaceholderScreen(navController: NavController, title: String) {
+    Scaffold(topBar = { TopAppBar(title = { Text(title) }) }, bottomBar = { BottomNavBar(navController) }) { padding -> Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text("به‌زودی...") } }
+}
