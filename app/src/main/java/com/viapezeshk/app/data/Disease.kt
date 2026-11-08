@@ -8,7 +8,8 @@ data class Disease(
     @PrimaryKey val id: String,
     val title: String,
     val subtitle: String,
-    val iconName: String, // اسم آیکون رو ذخیره می‌کنیم (مثل "Coronavirus")
+    val iconName: String,
     val category: String,
-    val content: String // محتوای کامل بیماری
+    val content: String,
+    val isBookmarked: Boolean = false // فیلد جدید
 )
