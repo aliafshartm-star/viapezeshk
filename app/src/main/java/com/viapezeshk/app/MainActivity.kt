@@ -147,7 +147,7 @@ fun HomeScreen(
                 diseaseCategories.chunked(2).forEach { rowCategories ->
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         rowCategories.forEach { category ->
-                            CategoryCard(category, navController)
+                            CategoryCard(category = category, navController = navController)
                         }
                     }
                 }
@@ -157,8 +157,9 @@ fun HomeScreen(
     }
 }
 
+// با اضافه کردن RowScope اینجا، خطای weight حل میشه
 @Composable
-fun CategoryCard(category: CategoryItem, navController: NavController) {
+fun RowScope.CategoryCard(category: CategoryItem, navController: NavController) {
     Row(
         modifier = Modifier
             .weight(1f)
@@ -314,7 +315,7 @@ fun DiseaseListItem(disease: Disease, onClick: () -> Unit = {}) {
 @Composable
 fun BottomNavBar(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentRoute = navBackEntry?.destination?.route
 
     NavigationBar(containerColor = SurfaceWhite, tonalElevation = 8.dp) {
         NavigationBarItem(icon = { Icon(Icons.Filled.Home, contentDescription = "خانه") }, label = { Text("خانه", fontSize = 11.sp) }, selected = currentRoute == "home", onClick = { if (currentRoute != "home") navController.navigate("home") { popUpTo("home") { inclusive = true } } }, colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryTeal, selectedTextColor = PrimaryTeal, indicatorColor = PrimaryTeal.copy(alpha = 0.1f), unselectedIconColor = TextSecondary, unselectedTextColor = TextSecondary))
@@ -481,7 +482,6 @@ fun SettingsScreen(navController: NavController) {
     }
 }
 
-// ======== صفحه جزئیات بیماری (با استایل حرفه‌ای) ========
 @Composable
 fun DiseaseDetailScreen(
     navController: NavController, 
@@ -504,7 +504,6 @@ fun DiseaseDetailScreen(
         else {
             Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize().verticalScroll(rememberScrollState())) {
                 
-                // هدر بیماری
                 Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(PrimaryTeal.copy(alpha = 0.1f)).padding(16.dp)) { 
                     Column { 
                         Text(disease.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimaryTeal)
@@ -516,11 +515,9 @@ fun DiseaseDetailScreen(
                 BannerCarousel(banners = banners)
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // پارس کردن و نمایش متن به صورت حرفه‌ای
                 val sections = disease.content.split("\n\n")
                 sections.forEach { section ->
                     if (section.trim().startsWith("🚨")) {
-                        // کادر قرمز برای علائم خطر
                         Card(
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
                             shape = RoundedCornerShape(12.dp),
@@ -535,7 +532,6 @@ fun DiseaseDetailScreen(
                             )
                         }
                     } else if (section.trim().startsWith("🔹")) {
-                        // تیترهای بخش‌ها (مثل تعریف، چی خوبه...)
                         val title = section.substringBefore("\n").replace("🔹", "").trim()
                         val body = section.substringAfter("\n").trim()
                         Column(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -544,7 +540,6 @@ fun DiseaseDetailScreen(
                             Text(text = body, fontSize = 15.sp, lineHeight = 26.sp, color = TextPrimary)
                         }
                     } else {
-                        // بقیه متن‌ها
                         Text(text = section.trim(), fontSize = 15.sp, lineHeight = 26.sp, color = TextPrimary, modifier = Modifier.padding(vertical = 8.dp))
                     }
                 }
