@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Disease::class], version = 1, exportSchema = false)
+@Database(entities = [Disease::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun diseaseDao(): DiseaseDao
@@ -25,6 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "viapezeshk_database"
                 )
+                .fallbackToDestructiveMigration()
                 .addCallback(DatabaseCallback(context))
                 .build()
                 INSTANCE = instance
@@ -46,39 +47,89 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         suspend fun populateDatabase(diseaseDao: DiseaseDao) {
-            // پر کردن دیتابیس با اطلاعات اولیه
             val initialDiseases = listOf(
+                // --- مغز و اعصاب ---
                 Disease(
-                    id = "hpv",
-                    title = "HPV (پاپیلوما)",
-                    subtitle = "ویروس شایع، انواع و پیشگیری",
-                    iconName = "Coronavirus",
-                    category = "عفونت‌ها",
-                    content = "HPV یک ویروس بسیار شایع است که از طریق تماس پوستی منتقل می‌شود. بیشتر افراد اصلاً متوجه نمی‌شوند چون معمولاً بی‌علامت است. بدن اکثر افراد طی ۱ تا ۲ سال خودش ویروس را پاک می‌کند. اما بعضی تایپ‌های خاص اگر سال‌ها بمانند، می‌توانند باعث سرطان شوند.\n\nپیشگیری:\n- واکسن گارداسیل\n- غربالگری (پاپ‌اسمیر)\n- استفاده از کاندوم"
+                    id = "migraine",
+                    title = "میگرن",
+                    subtitle = "سردردهای شدید و ضربان‌دار",
+                    iconName = "Psychology",
+                    category = "مغز و اعصاب",
+                    content = "میگرن یک نوع سردرد ضربان‌دار است که معمولاً در یک طرف سر رخ می‌دهد و با تهوع و حساسیت به نور همراه است.\n\nمحرک‌ها:\n- استرس و کم‌خوابی\n- گشنگی\n- غذاهای خاص (پنیر، شکلات)\n\nدرمان: استراحت در اتاق تاریک و مصرف مسکن."
                 ),
+                Disease(
+                    id = "alzheimer",
+                    title = "آلزایمر",
+                    subtitle = "زوال عقل و فراموشی",
+                    iconName = "Psychology",
+                    category = "مغز و اعصاب",
+                    content = "آلزایمر شایع‌ترین علت دمانس (زوال عقل) است که به تدریج حافظه و توانایی‌های شناختی را تحت تاثیر قرار می‌دهد."
+                ),
+
+                // --- دهان و دندان ---
+                Disease(
+                    id = "cavity",
+                    title = "پوسیدگی دندان",
+                    subtitle = "درد و حساسیت دندانی",
+                    iconName = "Face",
+                    category = "دهان و دندان",
+                    content = "پوسیدگی دندان (کاریز) زمانی رخ می‌دهد که باکتری‌های دهان اسید تولید کرده و مینای دندان را تخریب می‌کنند."
+                ),
+
+                // --- قلب و ریه ---
+                Disease(
+                    id = "hypertension",
+                    title = "فشار خون بالا",
+                    subtitle = "قاتل خاموش",
+                    iconName = "Favorite",
+                    category = "قلب و ریه",
+                    content = "فشار خون بالا معمولاً بی‌علامت است اما ریسک سکته قلبی و مغزی را به شدت افزایش می‌دهد. کنترل وزن و کاهش نمک بسیار موثر است."
+                ),
+
+                // --- معده و گوارش ---
+                Disease(
+                    id = "reflux",
+                    title = "ریفلاکس معده",
+                    subtitle = "سوزش سر دل و برگشت اسید",
+                    iconName = "Fastfood",
+                    category = "معده و گوارش",
+                    content = "ریفلاکس زمانی رخ می‌دهد که اسید معده به مری برمی‌گردد.\n\nدرمان خانگی:\n- شام سبک و حداقل ۳ ساعت قبل از خواب\n- کاهش وزن"
+                ),
+
+                // --- پوست و مو ---
                 Disease(
                     id = "hair_loss",
                     title = "ریزش مو",
                     subtitle = "علل، انواع و درمان‌های ریزش مو",
                     iconName = "Face",
                     category = "پوست و مو",
-                    content = "ریزش مو دلایل مختلفی دارد:\n\nانواع:\n- آندروژنتیک (ارثی): شایع‌ترین نوع\n- تلوژن افلوویوم: بعد از استرس یا زایمان\n- آلوپسی آره‌آتا: خودایمنی\n\nعلل شایع:\n- کمبود آهن، ویتامین D یا روی\n- اختلالات تیروئید\n\nدرمان:\n- مینوکسیدیل\n- فیناستراید (با نسخه پزشک)"
+                    content = "ریزش مو دلایل مختلفی دارد (آندروژنتیک، استرس، کمبود آهن). مینوکسیدیل و مکمل‌ها (با تجویز پزشک) از درمان‌های رایج هستند."
                 ),
                 Disease(
-                    id = "migraine",
-                    title = "میگرن",
-                    subtitle = "سردردهای شدید و ضربان‌دار",
-                    iconName = "Psychology",
-                    category = "اعصاب",
-                    content = "میگرن یک نوع سردرد ضربان‌دار است که معمولاً در یک طرف سر رخ می‌دهد و با تهوع و حساسیت به نور همراه است.\n\nمحرک‌ها:\n- استرس و کم‌خوابی\n- گشنگی\n- غذاهای خاص (پنیر، شکلات)\n\nدرمان: استراحت در اتاق تاریک و مصرف مسکن."
+                    id = "acne",
+                    title = "آکنه (جوش)",
+                    subtitle = "التهاب پوستی",
+                    iconName = "Face",
+                    category = "پوست و مو",
+                    content = "آکنه در اثر انسداد منافذ پوست با چربی و سلول‌های مرده ایجاد می‌شود. شستشوی منظم و پرهیز از دست زدن به جوش‌ها توصیه می‌شود."
+                ),
+
+                // --- عوامل بیماری‌زا ---
+                Disease(
+                    id = "hpv",
+                    title = "HPV (پاپیلوما)",
+                    subtitle = "ویروس شایع در زنان و مردان",
+                    iconName = "Coronavirus",
+                    category = "عوامل بیماری‌زا",
+                    content = "HPV شایع‌ترین عفونت مقاربتی است. واکسن گارداسیل بهترین روش پیشگیری است. انواع پرخطر آن می‌توانند باعث سرطان شوند."
                 ),
                 Disease(
-                    id = "reflux",
-                    title = "ریفلاکس معده",
-                    subtitle = "سوزش سر دل و برگشت اسید",
-                    iconName = "Fastfood",
-                    category = "گوارش",
-                    content = "ریفلاکس زمانی رخ می‌دهد که اسید معده به مری برمی‌گردد.\n\nعلائم:\n- سوزش سر دل\n- برگشت غذا به دهان\n\nدرمان خانگی:\n- شام سبک و حداقل ۳ ساعت قبل از خواب\n- کاهش وزن\n- بالاتر گذاشتن سر تخت"
+                    id = "flu",
+                    title = "سرماخوردگی و آنفلوآنزا",
+                    subtitle = "عفونت‌های ویروسی تنفسی",
+                    iconName = "Coronavirus",
+                    category = "عوامل بیماری‌زا",
+                    content = "بیماری‌های ویروسی شایع فصل سرد. استراحت، مصرف مایعات و مسکن‌ها برای تسکین علائم موثرند. آنتی‌بیوتیک روی ویروس اثر ندارد."
                 )
             )
             diseaseDao.insertAll(initialDiseases)
