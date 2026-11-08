@@ -157,7 +157,6 @@ fun HomeScreen(
     }
 }
 
-// با اضافه کردن RowScope اینجا، خطای weight حل میشه
 @Composable
 fun RowScope.CategoryCard(category: CategoryItem, navController: NavController) {
     Row(
@@ -315,7 +314,7 @@ fun DiseaseListItem(disease: Disease, onClick: () -> Unit = {}) {
 @Composable
 fun BottomNavBar(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackEntry?.destination?.route
+    val currentRoute = navBackStackEntry?.destination?.route
 
     NavigationBar(containerColor = SurfaceWhite, tonalElevation = 8.dp) {
         NavigationBarItem(icon = { Icon(Icons.Filled.Home, contentDescription = "خانه") }, label = { Text("خانه", fontSize = 11.sp) }, selected = currentRoute == "home", onClick = { if (currentRoute != "home") navController.navigate("home") { popUpTo("home") { inclusive = true } } }, colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryTeal, selectedTextColor = PrimaryTeal, indicatorColor = PrimaryTeal.copy(alpha = 0.1f), unselectedIconColor = TextSecondary, unselectedTextColor = TextSecondary))
