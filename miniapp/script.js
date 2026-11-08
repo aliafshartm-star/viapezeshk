@@ -1,4 +1,3 @@
-// اتصال به مینی‌اپ تلگرام
 const tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
@@ -7,7 +6,6 @@ if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
   document.getElementById('userName').innerText = tg.initDataUnsafe.user.first_name || "مدیر";
 }
 
-// ======== مدیریت تب‌ها ========
 function switchTab(tabName) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -24,10 +22,31 @@ function switchTab(tabName) {
   }
 }
 
+// ======== تابع آپلود عکس به سرور رایگان (Telegra.ph) ========
+async function uploadImageToTelegraph(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+        const res = await fetch('https://api.telegra.ph/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data && data[0] && data[0].src) {
+            return 'https://telegra.ph' + data[0].src;
+        }
+        return null;
+    } catch (e) {
+        console.error("Upload Error:", e);
+        return null;
+    }
+}
+
 // ======== منطق بنرها ========
-function addBanner() {
+async function addBanner() {
   const position = document.getElementById('bannerPosition').value;
-  const image = document.getElementById('bannerImage').value;
+  const imageFile = document.getElementById('bannerImageFile').files[0];
+  const imageUrl = document.getElementById('bannerImage').value.trim();
   const title = document.getElementById('bannerTitle').value;
   const subtitle = document.getElementById('bannerSubtitle').value;
   const bgColor = document.getElementById('bannerColor').value;
@@ -40,7 +59,23 @@ function addBanner() {
     return;
   }
 
-  let bannerType = image.trim() !== "" ? "image_text" : "text_only";
+  let finalImageUrl = imageUrl;
+  const btn = document.getElementById('submitBtn');
+  btn.innerText = "⏳ در حال آپلود عکس...";
+  btn.disabled = true;
+
+  // اگر کاربر عکسی از گالری انتخاب کرده بود، اول آپلودش می‌کنیم
+  if (imageFile) {
+      finalImageUrl = await uploadImageToTelegraph(imageFile);
+      if (!finalImageUrl) {
+          tg.showAlert("خطا در آپلود عکس. لطفاً دوباره تلاش کنید یا از لینک عکس استفاده کنید.");
+          btn.innerText = "🚀 ثبت و انتشار بنر";
+          btn.disabled = false;
+          return;
+      }
+  }
+
+  let bannerType = finalImageUrl !== "" ? "image_text" : "text_only";
 
   const newBanner = {
     id: "banner_" + Date.now(),
@@ -48,23 +83,17 @@ function addBanner() {
     type: bannerType,
     active: true,
     priority: 1,
-    targeting: {
-      cities: city === "all" ? [] : [city]
-    },
+    targeting: { cities: city === "all" ? [] : [city] },
     content: {
       title: title,
       subtitle: subtitle,
       bgColor: bgColor,
       textColor: "#ffffff",
-      image: image.trim() !== "" ? image : null
+      image: finalImageUrl !== "" ? finalImageUrl : null
     },
-    action: {
-      type: actionType,
-      value: actionValue
-    }
+    action: { type: actionType, value: actionValue }
   };
 
-  // ارسال به ربات با مشخص کردن نوع عملیات
   const payload = { action: "add_banner", data: newBanner };
   tg.sendData(JSON.stringify(payload));
   tg.close();
@@ -84,11 +113,9 @@ function addContactItem() {
     return;
   }
 
-  const newItem = { id: Date.now(), icon, title, value, type };
-  tempContacts.push(newItem);
+  tempContacts.push({ id: Date.now(), icon, title, value, type });
   renderContactsPreview();
   
-  // پاک کردن فرم
   document.getElementById('contactTitle').value = '';
   document.getElementById('contactValue').value = '';
 }
@@ -126,7 +153,6 @@ function saveAllContacts() {
     tg.showAlert("لیست ارتباطات خالی است!");
     return;
   }
-  
   const payload = { action: "update_contacts", data: tempContacts };
   tg.sendData(JSON.stringify(payload));
   tg.close();
