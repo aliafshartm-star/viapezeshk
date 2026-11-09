@@ -36,12 +36,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         prefs.edit().putString("user_city", city).apply()
     }
 
-    // تابع کمکی برای تبدیل عدد به ضریب فونت
-    fun getFontScale(): Float {
-        return when (_fontSize.value) {
-            0 -> 0.85f // کوچک
-            2 -> 1.2f  // بزرگ
-            else -> 1.0f // متوسط
-        }
+    // ---- قابلیت‌های جدید برای صفحه خوش‌آمدگویی ----
+    fun hasSeenDisclaimer(): Boolean {
+        return prefs.getBoolean("has_seen_disclaimer", false)
+    }
+
+    fun setHasSeenDisclaimer() {
+        prefs.edit().putBoolean("has_seen_disclaimer", true).apply()
     }
 }
