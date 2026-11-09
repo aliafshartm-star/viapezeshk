@@ -14,6 +14,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -93,7 +94,9 @@ class MainActivity : ComponentActivity() {
                     composable("settings") { SettingsScreen(navController, settingsViewModel) }
                     composable("lab_calculator") { LabCalculatorScreen(navController) }
                     
-                    composable("health_panel") { HealthScreen(navController) } // <--- مسیر جدید پنل سلامت
+                    // مسیرهای جدید
+                    composable("health_panel") { HealthScreen(navController) }
+                    composable("period_tracker") { PeriodScreen(navController) }
                     
                     composable("pregnancy") { PregnancyScreen(navController) }
                     composable("pediatrics") { PediatricScreen(navController) }
@@ -281,18 +284,22 @@ fun BannerCarousel(banners: List<Banner>) {
 
 @Composable
 fun QuickActionsSection(navController: NavController) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Outlined.Science, title = "تفسیر بالینی", onClick = { navController.navigate("lab_calculator") })
-        QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Outlined.MonitorHeart, title = "پنل سلامت", onClick = { navController.navigate("health_panel") })
-        QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Outlined.PregnantWoman, title = "بارداری", onClick = { navController.navigate("pregnancy") })
-        QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Outlined.Search, title = "جستجو", onClick = { navController.navigate("search") })
-        QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Outlined.Phone, title = "ارتباط", onClick = { navController.navigate("contact") })
+    Row(
+        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        QuickActionItem(icon = Icons.Outlined.Science, title = "تفسیر بالینی", onClick = { navController.navigate("lab_calculator") })
+        QuickActionItem(icon = Icons.Outlined.MonitorHeart, title = "پنل سلامت", onClick = { navController.navigate("health_panel") })
+        QuickActionItem(icon = Icons.Outlined.CalendarMonth, title = "تقویم بانوان", onClick = { navController.navigate("period_tracker") })
+        QuickActionItem(icon = Icons.Outlined.PregnantWoman, title = "بارداری", onClick = { navController.navigate("pregnancy") })
+        QuickActionItem(icon = Icons.Outlined.Search, title = "جستجو", onClick = { navController.navigate("search") })
+        QuickActionItem(icon = Icons.Outlined.Phone, title = "ارتباط", onClick = { navController.navigate("contact") })
     }
 }
 
 @Composable
-fun QuickActionItem(modifier: Modifier = Modifier, icon: ImageVector, title: String, onClick: () -> Unit = {}) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable { onClick() }) {
+fun QuickActionItem(icon: ImageVector, title: String, onClick: () -> Unit = {}) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(72.dp).clickable { onClick() }) {
         Box(modifier = Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
             Icon(imageVector = icon, contentDescription = title, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
         }
@@ -358,7 +365,7 @@ fun DiseaseListItem(disease: Disease, onClick: () -> Unit = {}) {
 @Composable
 fun BottomNavBar(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentRoute = navBackEntry?.destination?.route
 
     NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 8.dp) {
         NavigationBarItem(icon = { Icon(Icons.Filled.Home, contentDescription = "خانه") }, label = { Text("خانه", fontSize = 11.sp) }, selected = currentRoute == "home", onClick = { if (currentRoute != "home") navController.navigate("home") { popUpTo("home") { inclusive = true } } }, colors = NavigationBarItemDefaults.colors(selectedIconColor = MaterialTheme.colorScheme.primary, selectedTextColor = MaterialTheme.colorScheme.primary, indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant, unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant))
