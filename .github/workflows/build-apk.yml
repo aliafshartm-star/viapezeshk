@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android Release APK
 
 on:
   push:
@@ -19,16 +19,26 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    - name: Decode Keystore
+      env:
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      run: |
+        echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
+
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
         gradle-version: 8.2
 
-    - name: Build with Gradle
-      run: gradle assembleDebug
+    - name: Build Release APK
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: gradle assembleRelease
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: ViaPezeshk-Debug-APK
-        path: app/build/outputs/apk/debug/app-debug.apk
+        name: ViaPezeshk-Release-APK
+        path: app/build/outputs/apk/release/app-release.apk
