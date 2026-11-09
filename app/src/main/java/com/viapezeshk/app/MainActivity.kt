@@ -135,7 +135,8 @@ val diseaseCategories = listOf(
     CategoryItem("قلب و ریه", "❤️"), CategoryItem("معده و گوارش", "🫃"),
     CategoryItem("کلیه و مجاری ادراری", "🫘"), CategoryItem("دستگاه تناسلی", "🧬"),
     CategoryItem("استخوان و مفاصل", "🦴"), CategoryItem("پوست و مو", "💇"),
-    CategoryItem("غدد و خون", "🩸"), CategoryItem("عوامل بیماری‌زا", "🦠")
+    CategoryItem("غدد و خون", "🩸"), CategoryItem("عوامل بیماری‌زا", "🦠"),
+    CategoryItem("آزمایشگاه و پاتولوژی", "🔬") // <--- دسته جدید اضافه شد
 )
 
 @Composable
@@ -439,7 +440,7 @@ fun SearchScreen(navController: NavController, viewModel: DiseaseViewModel = vie
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.SmartToy, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(text = if (isOnlineResult) "پاسخ از منابع آنلاین (ویکی‌پدیا)" else "پاسخ از دیتابیس آفلاین", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
+                                Text(text = if (isOnlineResult) "پاسخ از منابع آنلاین (ویکی‌پدیا + PubMed)" else "پاسخ از دیتابیس آفلاین", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(text = searchResult!!, fontSize = 15.sp, lineHeight = 28.sp, color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Justify)
