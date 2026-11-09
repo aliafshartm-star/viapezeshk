@@ -13,9 +13,9 @@ interface MedicationDao {
     @Query("SELECT * FROM medications")
     fun getAllMedications(): Flow<List<Medication>>
 
-    // اضافه کردن داروی جدید
+    // اضافه کردن داروی جدید و برگردوندن آیدی اون
     @Insert
-    suspend fun insertMedication(medication: Medication)
+    suspend fun insertMedication(medication: Medication): Long // <--- این خط اصلاح شد
 
     // آپدیت کردن وضعیت دارو (روشن/خاموش کردن یادآور)
     @Update
