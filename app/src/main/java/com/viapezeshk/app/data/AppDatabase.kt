@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Disease::class, Drug::class, Medication::class, HealthRecord::class, PeriodRecord::class], 
-    version = 11, 
+    version = 12, 
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,7 +20,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun drugDao(): DrugDao
     abstract fun medicationDao(): MedicationDao
     abstract fun healthRecordDao(): HealthRecordDao
-    abstract fun periodDao(): PeriodDao // <--- اضافه شد
+    abstract fun periodDao(): PeriodDao
 
     companion object {
         @Volatile
