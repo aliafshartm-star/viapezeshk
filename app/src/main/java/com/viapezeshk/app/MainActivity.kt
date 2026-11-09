@@ -73,12 +73,10 @@ class MainActivity : ComponentActivity() {
             ViaPezeshkTheme(darkTheme = isDarkMode, fontScale = fontScale) {
                 val navController = rememberNavController()
                 
-                // تعیین نقطه شروع بر اساس دیدن یا ندیدن سلب مسئولیت
                 val startDestination = if (settingsViewModel.hasSeenDisclaimer()) "home" else "welcome"
                 
                 NavHost(navController = navController, startDestination = startDestination) {
                     
-                    // صفحه خوش‌آمدگویی
                     composable("welcome") {
                         WelcomeScreen(onAccept = {
                             settingsViewModel.setHasSeenDisclaimer()
@@ -94,6 +92,8 @@ class MainActivity : ComponentActivity() {
                     composable("contact") { ContactScreen(navController) }
                     composable("settings") { SettingsScreen(navController, settingsViewModel) }
                     composable("lab_calculator") { LabCalculatorScreen(navController) }
+                    
+                    composable("health_panel") { HealthScreen(navController) } // <--- مسیر جدید پنل سلامت
                     
                     composable("pregnancy") { PregnancyScreen(navController) }
                     composable("pediatrics") { PediatricScreen(navController) }
@@ -282,21 +282,22 @@ fun BannerCarousel(banners: List<Banner>) {
 @Composable
 fun QuickActionsSection(navController: NavController) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        QuickActionItem(icon = Icons.Outlined.Science, title = "تفسیر بالینی", onClick = { navController.navigate("lab_calculator") })
-        QuickActionItem(icon = Icons.Outlined.PregnantWoman, title = "بارداری", onClick = { navController.navigate("pregnancy") })
-        QuickActionItem(icon = Icons.Outlined.Search, title = "جستجو", onClick = { navController.navigate("search") })
-        QuickActionItem(icon = Icons.Outlined.Phone, title = "ارتباط", onClick = { navController.navigate("contact") })
+        QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Outlined.Science, title = "تفسیر بالینی", onClick = { navController.navigate("lab_calculator") })
+        QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Outlined.MonitorHeart, title = "پنل سلامت", onClick = { navController.navigate("health_panel") })
+        QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Outlined.PregnantWoman, title = "بارداری", onClick = { navController.navigate("pregnancy") })
+        QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Outlined.Search, title = "جستجو", onClick = { navController.navigate("search") })
+        QuickActionItem(modifier = Modifier.weight(1f), icon = Icons.Outlined.Phone, title = "ارتباط", onClick = { navController.navigate("contact") })
     }
 }
 
 @Composable
-fun QuickActionItem(icon: ImageVector, title: String, onClick: () -> Unit = {}) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(72.dp).clickable { onClick() }) {
-        Box(modifier = Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
-            Icon(imageVector = icon, contentDescription = title, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
+fun QuickActionItem(modifier: Modifier = Modifier, icon: ImageVector, title: String, onClick: () -> Unit = {}) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable { onClick() }) {
+        Box(modifier = Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
+            Icon(imageVector = icon, contentDescription = title, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = title, fontSize = 12.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+        Text(text = title, fontSize = 11.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, maxLines = 1)
     }
 }
 
