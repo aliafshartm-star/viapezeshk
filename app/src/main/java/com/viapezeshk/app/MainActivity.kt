@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
                     
                     composable("health_panel") { HealthScreen(navController) }
                     composable("period_tracker") { PeriodScreen(navController) }
-                    composable("bmi_calculator") { BmiScreen(navController) } // <--- مسیر جدید
+                    composable("bmi_calculator") { BmiScreen(navController) }
                     
                     composable("pregnancy") { PregnancyScreen(navController) }
                     composable("pediatrics") { PediatricScreen(navController) }
@@ -148,14 +148,48 @@ fun HomeScreen(
     val context = LocalContext.current
     val banners by bannerViewModel.banners.collectAsState()
     val userCity by settingsViewModel.userCity.collectAsState()
+    
+    var showEmergencyDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(userCity) {
         bannerViewModel.loadBanners("home_main", userCity)
     }
 
+    if (showEmergencyDialog) {
+        AlertDialog(
+            onDismissRequest = { showEmergencyDialog = false },
+            title = { Text("تماس با اورژانس", fontWeight = FontWeight.Bold, color = Color.Red) },
+            text = { Text("آیا مطمئنید می‌خواهید با اورژانس ۱۱۵ تماس بگیرید؟") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showEmergencyDialog = false
+                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:115"))
+                    context.startActivity(intent)
+                }) {
+                    Text("بله، تماس بگیر", color = Color.Red, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEmergencyDialog = false }) {
+                    Text("لغو")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = { TopHeader(onSettingsClick = { navController.navigate("settings") }) },
         bottomBar = { BottomNavBar(navController) },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showEmergencyDialog = true },
+                containerColor = Color(0xFFD32F2F),
+                contentColor = Color.White,
+                shape = CircleShape
+            ) {
+                Icon(Icons.Default.PhoneInTalk, contentDescription = "اورژانس ۱۱۵")
+            }
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
@@ -185,7 +219,7 @@ fun HomeScreen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
@@ -291,7 +325,7 @@ fun QuickActionsSection(navController: NavController) {
         QuickActionItem(icon = Icons.Outlined.Science, title = "تفسیر بالینی", onClick = { navController.navigate("lab_calculator") })
         QuickActionItem(icon = Icons.Outlined.MonitorHeart, title = "پنل سلامت", onClick = { navController.navigate("health_panel") })
         QuickActionItem(icon = Icons.Outlined.CalendarMonth, title = "تقویم بانوان", onClick = { navController.navigate("period_tracker") })
-        QuickActionItem(icon = Icons.Outlined.Calculate, title = "BMI و کالری", onClick = { navController.navigate("bmi_calculator") }) // <--- دکمه جدید
+        QuickActionItem(icon = Icons.Outlined.Calculate, title = "BMI و کالری", onClick = { navController.navigate("bmi_calculator") })
         QuickActionItem(icon = Icons.Outlined.PregnantWoman, title = "بارداری", onClick = { navController.navigate("pregnancy") })
         QuickActionItem(icon = Icons.Outlined.Search, title = "جستجو", onClick = { navController.navigate("search") })
         QuickActionItem(icon = Icons.Outlined.Phone, title = "ارتباط", onClick = { navController.navigate("contact") })
