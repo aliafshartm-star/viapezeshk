@@ -94,9 +94,9 @@ class MainActivity : ComponentActivity() {
                     composable("settings") { SettingsScreen(navController, settingsViewModel) }
                     composable("lab_calculator") { LabCalculatorScreen(navController) }
                     
-                    // مسیرهای جدید
                     composable("health_panel") { HealthScreen(navController) }
                     composable("period_tracker") { PeriodScreen(navController) }
+                    composable("bmi_calculator") { BmiScreen(navController) } // <--- مسیر جدید
                     
                     composable("pregnancy") { PregnancyScreen(navController) }
                     composable("pediatrics") { PediatricScreen(navController) }
@@ -291,6 +291,7 @@ fun QuickActionsSection(navController: NavController) {
         QuickActionItem(icon = Icons.Outlined.Science, title = "تفسیر بالینی", onClick = { navController.navigate("lab_calculator") })
         QuickActionItem(icon = Icons.Outlined.MonitorHeart, title = "پنل سلامت", onClick = { navController.navigate("health_panel") })
         QuickActionItem(icon = Icons.Outlined.CalendarMonth, title = "تقویم بانوان", onClick = { navController.navigate("period_tracker") })
+        QuickActionItem(icon = Icons.Outlined.Calculate, title = "BMI و کالری", onClick = { navController.navigate("bmi_calculator") }) // <--- دکمه جدید
         QuickActionItem(icon = Icons.Outlined.PregnantWoman, title = "بارداری", onClick = { navController.navigate("pregnancy") })
         QuickActionItem(icon = Icons.Outlined.Search, title = "جستجو", onClick = { navController.navigate("search") })
         QuickActionItem(icon = Icons.Outlined.Phone, title = "ارتباط", onClick = { navController.navigate("contact") })
