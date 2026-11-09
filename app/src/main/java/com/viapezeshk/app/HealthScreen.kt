@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.viapezeshk.app
 
 import androidx.compose.foundation.background
@@ -29,7 +31,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthScreen(navController: NavController, viewModel: HealthViewModel = viewModel()) {
     var selectedTab by remember { mutableStateOf(0) }
