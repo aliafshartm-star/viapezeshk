@@ -72,7 +72,22 @@ class MainActivity : ComponentActivity() {
 
             ViaPezeshkTheme(darkTheme = isDarkMode, fontScale = fontScale) {
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = "home") {
+                
+                // تعیین نقطه شروع بر اساس دیدن یا ندیدن سلب مسئولیت
+                val startDestination = if (settingsViewModel.hasSeenDisclaimer()) "home" else "welcome"
+                
+                NavHost(navController = navController, startDestination = startDestination) {
+                    
+                    // صفحه خوش‌آمدگویی
+                    composable("welcome") {
+                        WelcomeScreen(onAccept = {
+                            settingsViewModel.setHasSeenDisclaimer()
+                            navController.navigate("home") {
+                                popUpTo("welcome") { inclusive = true }
+                            }
+                        })
+                    }
+
                     composable("home") { HomeScreen(navController) }
                     composable("search") { SearchScreen(navController) }
                     composable("bookmarks") { BookmarksScreen(navController) }
@@ -315,6 +330,11 @@ fun getIconFromName(name: String): ImageVector {
         "Psychology" -> Icons.Default.Psychology
         "Fastfood" -> Icons.Default.Fastfood
         "Favorite" -> Icons.Default.Favorite
+        "Visibility" -> Icons.Default.Visibility
+        "Hearing" -> Icons.Default.Hearing
+        "WaterDrop" -> Icons.Default.WaterDrop
+        "Accessibility" -> Icons.Default.Accessibility
+        "Bloodtype" -> Icons.Default.Bloodtype
         else -> Icons.Default.Coronavirus
     }
 }
@@ -546,7 +566,6 @@ fun DiseaseDetailScreen(
     Scaffold(topBar = { TopAppBar(title = { Text(disease?.title ?: "جزئیات", fontWeight = FontWeight.Bold) }, 
         actions = {
             if (disease != null) {
-                // دکمه اشتراک‌گذاری
                 IconButton(onClick = { 
                     val shareIntent = Intent().apply {
                         action = Intent.ACTION_SEND
@@ -557,7 +576,6 @@ fun DiseaseDetailScreen(
                 }) {
                     Icon(Icons.Default.Share, contentDescription = "اشتراک‌گذاری", tint = MaterialTheme.colorScheme.onSurface)
                 }
-                // دکمه نشان‌کردن
                 IconButton(onClick = { bookmarkViewModel.toggleDiseaseBookmark(disease.id, disease.isBookmarked) }) {
                     Icon(
                         imageVector = if (disease.isBookmarked) Icons.Filled.Star else Icons.Outlined.Star,
@@ -650,7 +668,6 @@ fun DrugDetailScreen(
     Scaffold(topBar = { TopAppBar(title = { Text(drug?.name ?: "جزئیات دارو", fontWeight = FontWeight.Bold) }, 
         actions = {
             if (drug != null) {
-                // دکمه اشتراک‌گذاری
                 IconButton(onClick = { 
                     val shareIntent = Intent().apply {
                         action = Intent.ACTION_SEND
@@ -661,7 +678,6 @@ fun DrugDetailScreen(
                 }) {
                     Icon(Icons.Default.Share, contentDescription = "اشتراک‌گذاری", tint = MaterialTheme.colorScheme.onSurface)
                 }
-                // دکمه نشان‌کردن
                 IconButton(onClick = { bookmarkViewModel.toggleDrugBookmark(drug.id, drug.isBookmarked) }) {
                     Icon(
                         imageVector = if (drug.isBookmarked) Icons.Filled.Star else Icons.Outlined.Star,
