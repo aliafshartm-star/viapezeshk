@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Disease::class, Drug::class], version = 8, exportSchema = false)
+@Database(entities = [Disease::class, Drug::class], version = 9, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun diseaseDao(): DiseaseDao
@@ -41,7 +41,7 @@ abstract class AppDatabase : RoomDatabase() {
                 super.onCreate(db)
                 INSTANCE?.let { database ->
                     CoroutineScope(Dispatchers.IO).launch {
-                        // حالا از فایل InitialData می‌خونیم
+                        // حالا از فایل InitialData که همه رو ترکیب کردیم می‌خونیم
                         database.diseaseDao().insertAll(InitialData.diseases)
                         database.drugDao().insertAll(InitialData.drugs)
                     }
