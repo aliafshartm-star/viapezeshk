@@ -2,9 +2,8 @@ package com.viapezeshk.app.data
 
 object InitialData {
 
-    // اینجا همه بیماری‌های فایل‌های جداگانه رو با هم ترکیب می‌کنیم
     val diseases = listOf(
-        // مغز و اعصاب (همون‌هایی که قبلاً توی این فایل نوشتیم)
+        // مغز و اعصاب
         Disease(
             id = "migraine",
             title = "میگرن",
@@ -56,9 +55,9 @@ object InitialData {
     ) + EyeDiseases.diseases + EntDiseases.diseases + DentalDiseases.diseases + 
         HeartLungDiseases.diseases + GastroDiseases.diseases + UrologyDiseases.diseases + 
         ReproductiveDiseases.diseases + OrthopedicDiseases.diseases + SkinHairDiseases.diseases + 
-        EndocrineBloodDiseases.diseases + PathogenDiseases.diseases + PsychiatricDiseases.diseases
+        EndocrineBloodDiseases.diseases + PathogenDiseases.diseases + PsychiatricDiseases.diseases +
+        WomensHealthDiseases.diseases + PathologyDiseases.diseases
 
-    // لیست داروها
     val drugs = listOf(
         Drug(
             id = "acetaminophen",
