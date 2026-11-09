@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- اجازه اتصال به اینترنت برای دریافت بنرهای تبلیغاتی و جستجوی آنلاین -->
+    <!-- مجوزهای اینترنت برای تبلیغات و جستجو -->
     <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- مجوز اعلان برای اندروید ۱۳ به بالا -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- مجوزهای تنظیم آلارم دقیق برای اندروید ۱۲ به بالا -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <application
         android:allowBackup="true"
@@ -21,6 +28,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- ثبت گیرنده آلارم برای یادآور دارو -->
+        <receiver 
+            android:name=".AlarmReceiver" 
+            android:exported="false" />
         
     </application>
 
