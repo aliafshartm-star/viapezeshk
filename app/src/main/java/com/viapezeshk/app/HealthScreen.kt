@@ -2,11 +2,14 @@
 
 package com.viapezeshk.app
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,11 +22,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.viapezeshk.app.data.HealthRecord
@@ -37,6 +42,23 @@ fun HealthScreen(navController: NavController, viewModel: HealthViewModel = view
     var selectedTab by remember { mutableStateOf(0) }
     val medications by viewModel.medications.collectAsState()
     val allRecords by viewModel.allHealthRecords.collectAsState()
+
+    // --- درخواست مجوز اعلان (مخصوص اندروید ۱۳ به بالا) ---
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { /* نتیجه مهم نیست، ما فقط درخواست می‌دیم */ }
+    )
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -101,7 +123,7 @@ fun MedicationTab(viewModel: HealthViewModel, medications: List<Medication>) {
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(value = dosage, onValueChange = { dosage = it }, label = { Text("مقدار") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = time, onValueChange = { time = it }, label = { Text("ساعت") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                OutlinedTextField(value = time, onValueChange = { time = it }, label = { Text("ساعت (مثلاً 08:00)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = { if (name.isNotBlank()) { viewModel.addMedication(name, dosage, time); name = ""; dosage = ""; time = "" } }, modifier = Modifier.fillMaxWidth().height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary), shape = RoundedCornerShape(12.dp)) {
                     Icon(Icons.Default.Add, contentDescription = null); Spacer(modifier = Modifier.width(8.dp)); Text("افزودن", fontWeight = FontWeight.Bold)
